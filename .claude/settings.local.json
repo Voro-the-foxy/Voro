@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"STARTED PID=$!\")",
+      "Read(//tmp/**)",
+      "Bash(kill 3733)",
+      "Bash(pkill -f \"vite\")"
+    ]
+  }
+}
