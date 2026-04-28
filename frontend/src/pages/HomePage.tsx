@@ -23,8 +23,8 @@ function HomePage() {
   // MOCK: hardcoded quiz path progress.
   // TODO(backend): currentStep/totalSteps come from the user's quiz path on the
   //                server (e.g. enrolled curriculum). Replace with API value.
-  const currentStep = 4;
   const totalSteps = 12;
+  const currentStep = Math.min(solvedQuizzes + 1, totalSteps + 1);
   return (
     <div className="flex flex-col h-full bg-white text-black">
       <div className="flex-1 overflow-y-auto">
