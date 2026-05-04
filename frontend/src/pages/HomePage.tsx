@@ -28,9 +28,9 @@ function HomePage() {
   return (
     <div className="flex flex-col h-full bg-white text-black">
       <div className="flex-1 overflow-y-auto">
-        {/* MOCK: hardcoded streak count.
+        {/* MOCK: streak driven by solved quiz count (starts at 0, +1 per solve).
             TODO(backend): streak days come from /api/users/me/home.streakDays */}
-        <StreakBadge days={360} />
+        <StreakBadge days={solvedQuizzes} />
         {/* MOCK: hardcoded fox message.
             TODO(backend): fox message comes from /api/users/me/home.foxMessage
             (motivational copy or contextual nudge generated server-side) */}

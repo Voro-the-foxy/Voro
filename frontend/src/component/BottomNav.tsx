@@ -5,7 +5,7 @@ type Tab = "home" | "quiz" | "setting";
 
 export function BottomNav({ active }: { active: Tab }) {
   return (
-    <nav className="border-t border-black bg-white">
+    <nav className="border-t border-black bg-white md:hidden">
       <div className="grid grid-cols-3 px-2 py-3">
         <NavItem to="/home" icon={<Home className="w-6 h-6" />} label="home" active={active === "home"} />
         <NavItem to="/quiz" icon={<BookOpenCheck className="w-6 h-6" />} label="Quiz" active={active === "quiz"} />
