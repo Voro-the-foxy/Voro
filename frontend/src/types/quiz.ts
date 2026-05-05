@@ -10,6 +10,7 @@ export type MultipleChoiceQuestion = {
   prompt: string;
   choices: string[];
   correctIndex: number;
+  explanation?: string;
 };
 
 export type OpenAnswerQuestion = {

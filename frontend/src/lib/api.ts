@@ -1,8 +1,3 @@
-// SKELETON — not yet used at runtime.
-// The backend isn't connected; every domain repo under `lib/*` currently
-// reads from localStorage (see the MOCK headers there). Once the backend
-// is live, swap each repo function to call `api.*` per its TODO(backend)
-// note. Configure the URL via VITE_API_BASE_URL (defaults to localhost:8080).
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
@@ -23,10 +18,6 @@ async function request<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  // TODO(backend): attach auth headers here once the backend exposes an auth
-  //                endpoint (e.g. `Authorization: Bearer <jwt>` from a token
-  //                stored after POST /api/auth/login). On 401, redirect to a
-  //                login route and clear the token.
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: body ? { "Content-Type": "application/json" } : undefined,
@@ -37,9 +28,67 @@ async function request<T>(
   return res.json() as Promise<T>;
 }
 
+async function uploadMultipart<T>(path: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) throw new ApiError(res.status, await res.text());
+  return res.json() as Promise<T>;
+}
+
 export const api = {
   get: <T>(path: string) => request<T>("GET", path),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
+};
+
+// ----- Backend types (mirror Go DTOs in backend/internal/handler/dto/quiz_dto.go) -----
+
+export type DocumentDTO = {
+  id: string;
+  title: string;
+  source_type: string;
+  chunk_count: number;
+};
+
+export type QuestionDTO = {
+  id: string;
+  question_text: string;
+  choices: string[];
+  answer_index: number;
+  explanation: string;
+  source_chunk_ids: string[];
+  validation_score: number | null;
+};
+
+export type QuizDTO = {
+  id: string;
+  document_id: string;
+  status: string;
+  questions: QuestionDTO[];
+};
+
+export type QuizCreateBody = {
+  document_id: string;
+  count?: number;
+  difficulty?: "easy" | "medium" | "hard";
+  threshold?: number;
+};
+
+export const documentsApi = {
+  upload: (file: File, title?: string): Promise<DocumentDTO> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (title) fd.append("title", title);
+    return uploadMultipart<DocumentDTO>("/api/documents", fd);
+  },
+  list: (): Promise<DocumentDTO[]> => api.get<DocumentDTO[]>("/api/documents"),
+};
+
+export const quizzesApi = {
+  create: (body: QuizCreateBody): Promise<QuizDTO> =>
+    api.post<QuizDTO>("/api/quizzes", body),
+  get: (id: string): Promise<QuizDTO> => api.get<QuizDTO>(`/api/quizzes/${id}`),
 };

@@ -3,6 +3,7 @@ export const STORAGE_KEYS = {
   classes: "voro.classes.v1",
   notes: "voro.notes.v1",
   solvedQuizzes: "voro.solvedQuizzes.v1",
+  attempts: "voro.attempts.v1",
   alarms: "voro.alarms.v1",
   alarmsMaster: "voro.alarms.master.v1",
   exams: "voro.exams.v1",

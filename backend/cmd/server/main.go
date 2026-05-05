@@ -33,26 +33,27 @@ func setupRouter() *http.ServeMux {
 	placeHnd := &handler.PlaceHandler{Service: placeSvc}
 	mux.HandleFunc("GET /api/stores", placeHnd.GetAllStores)
 
-	// 2. Product 도메인 조립 (추가 시 여기에만 작성)
+	// 2. Product 도메인 조립
 	productRepo := &repository.ProductRepository{}
 	productSvc := &service.ProductService{Repo: productRepo}
 	productHnd := &handler.ProductHandler{Service: productSvc}
 	mux.HandleFunc("GET /api/products", productHnd.GetAllProducts)
 
+	// 3. Quiz 도메인 조립 (AI 서버 프록시)
+	aiRepo := repository.NewAIRepository()
+	quizSvc := &service.QuizService{Repo: aiRepo}
+	quizHnd := &handler.QuizHandler{Service: quizSvc}
+	mux.HandleFunc("POST /api/documents", quizHnd.UploadDocument)
+	mux.HandleFunc("GET /api/documents", quizHnd.ListDocuments)
+	mux.HandleFunc("POST /api/quizzes", quizHnd.CreateQuiz)
+	mux.HandleFunc("GET /api/quizzes/{id}", quizHnd.GetQuiz)
+
 	return mux
 }
 
 func main() {
-	repo := &repository.PlaceRepository{}
-	svc := &service.PlaceService{Repo: repo}
-	hnd := &handler.PlaceHandler{Service: svc}
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /api/stores", hnd.GetAllStores)
-
 	log.Println("서버 시작: 8080")
-	if err := http.ListenAndServe(":8080", cors(mux)); err != nil {
+	if err := http.ListenAndServe(":8080", cors(setupRouter())); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

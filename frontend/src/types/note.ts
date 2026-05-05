@@ -4,4 +4,5 @@ export type Note = {
   filename: string;
   size: number;
   addedAt: number;
+  documentId?: string;
 };

@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: voro-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-voro}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-voro}
+      POSTGRES_DB: ${POSTGRES_DB:-voro}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - voro-pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voro} -d ${POSTGRES_DB:-voro}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  voro-pgdata:

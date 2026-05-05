@@ -1,15 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { File as FileIcon, Upload, X } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { addClass, loadClasses, type ClassItem } from "@/lib/classes";
-import { addNote } from "@/lib/notes";
-
-// MOCK: nothing is actually uploaded. The picked File's bytes are discarded;
-// only its filename + size are saved to localStorage via lib/notes. See the
-// TODO(backend) note in handleSave for the real multipart upload to wire later.
+import { uploadNote } from "@/lib/notes";
 
 type Mode = "new" | "existing";
+type UploadState = "idle" | "uploading" | "succeeded" | "failed";
+type Phase = "idle" | "anim" | "text";
 
 const formatSize = (bytes: number) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -24,33 +22,52 @@ function UploadNotePage() {
   const [newName, setNewName] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [phase, setPhase] = useState<"idle" | "anim" | "text">("idle");
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [uploadState, setUploadState] = useState<UploadState>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const canSave =
     file !== null &&
+    uploadState !== "uploading" &&
     (mode === "new" ? newName.trim().length > 0 : selectedClassId !== null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!file) return;
     let classId: string;
     if (mode === "new") {
       const name = newName.trim();
       if (!name) return;
-      // TODO(backend): POST /api/classes
-      //                Body: { name } → ClassItem (server-assigned id).
       classId = addClass(name).id;
     } else {
       if (!selectedClassId) return;
       classId = selectedClassId;
     }
-    // TODO(backend): POST /api/notes (multipart/form-data)
-    //                Form: { classId, file: File }
-    //                Response: Note. The current call only sends metadata
-    //                (filename, size) — once wired, attach the actual `file`
-    //                object so the backend stores the bytes too.
-    addNote({ classId, filename: file.name, size: file.size });
+
+    setErrorMsg(null);
     setPhase("anim");
+    setUploadState("uploading");
+
+    try {
+      await uploadNote({ classId, file });
+      setUploadState("succeeded");
+    } catch (e) {
+      setUploadState("failed");
+      setErrorMsg(e instanceof Error ? e.message : "업로드에 실패했습니다");
+    }
+  };
+
+  useEffect(() => {
+    if (phase === "text" && uploadState === "succeeded") {
+      const t = setTimeout(() => navigate({ to: "/home" }), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [phase, uploadState, navigate]);
+
+  const dismissError = () => {
+    setPhase("idle");
+    setUploadState("idle");
+    setErrorMsg(null);
   };
 
   return (
@@ -102,10 +119,11 @@ function UploadNotePage() {
         </section>
 
         <section>
-          <h2 className="text-xs font-medium text-gray-700 mb-2">Note file</h2>
+          <h2 className="text-xs font-medium text-gray-700 mb-2">Note file (PDF)</h2>
           <input
             ref={fileRef}
             type="file"
+            accept="application/pdf"
             className="hidden"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
@@ -122,7 +140,7 @@ function UploadNotePage() {
             ) : (
               <>
                 <Upload className="w-5 h-5 shrink-0" />
-                <span className="flex-1 text-left text-gray-500">Choose a file</span>
+                <span className="flex-1 text-left text-gray-500">Choose a PDF</span>
               </>
             )}
           </button>
@@ -141,29 +159,54 @@ function UploadNotePage() {
 
       {phase !== "idle" && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white px-6">
-          {phase === "anim" ? (
+          {uploadState === "failed" ? (
+            <ErrorOverlay message={errorMsg ?? "업로드 실패"} onDismiss={dismissError} />
+          ) : phase === "anim" ? (
             <DotLottieReact
               src="/voro_1.lottie"
               autoplay
               loop={false}
               dotLottieRefCallback={(dotLottie) => {
                 if (!dotLottie) return;
-                dotLottie.addEventListener("complete", () => {
-                  setPhase("text");
-                  setTimeout(() => navigate({ to: "/home" }), 1800);
-                });
+                dotLottie.addEventListener("complete", () => setPhase("text"));
               }}
               style={{ width: 260, height: 260 }}
             />
-          ) : (
+          ) : uploadState === "succeeded" ? (
             <p className="text-3xl font-bold text-black text-center leading-tight">
               Voro devoured
               <br />
               your notes..!
             </p>
+          ) : (
+            <p className="text-base text-gray-700 text-center">
+              Voro is digesting your notes…
+              <br />
+              <span className="text-xs text-gray-500">자료 분석 + 임베딩 중</span>
+            </p>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function ErrorOverlay({
+  message,
+  onDismiss,
+}: {
+  message: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-4 max-w-xs">
+      <p className="text-base text-red-700 text-center">{message}</p>
+      <button
+        onClick={onDismiss}
+        className="px-4 py-2 border border-black rounded-md text-sm"
+      >
+        Try again
+      </button>
     </div>
   );
 }

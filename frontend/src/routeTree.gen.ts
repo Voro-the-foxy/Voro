@@ -18,6 +18,7 @@ import { Route as SetUpExamDayRouteImport } from './routes/set-up/exam-day'
 import { Route as SetUpAlarmRouteImport } from './routes/set-up/alarm'
 import { Route as QuizClassIdRouteImport } from './routes/quiz/$classId'
 import { Route as NotesUploadRouteImport } from './routes/notes/upload'
+import { Route as QuizClassIdResultAttemptIdRouteImport } from './routes/quiz/$classId_.result.$attemptId'
 
 const SettingRoute = SettingRouteImport.update({
   id: '/setting',
@@ -64,6 +65,12 @@ const NotesUploadRoute = NotesUploadRouteImport.update({
   path: '/notes/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizClassIdResultAttemptIdRoute =
+  QuizClassIdResultAttemptIdRouteImport.update({
+    id: '/quiz/$classId_/result/$attemptId',
+    path: '/quiz/$classId/result/$attemptId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/set-up/exam-day': typeof SetUpExamDayRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz/': typeof QuizIndexRoute
+  '/quiz/$classId/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/set-up/exam-day': typeof SetUpExamDayRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz': typeof QuizIndexRoute
+  '/quiz/$classId/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/set-up/exam-day': typeof SetUpExamDayRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz/': typeof QuizIndexRoute
+  '/quiz/$classId_/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/set-up/exam-day'
     | '/set-up/schedule'
     | '/quiz/'
+    | '/quiz/$classId/result/$attemptId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/set-up/exam-day'
     | '/set-up/schedule'
     | '/quiz'
+    | '/quiz/$classId/result/$attemptId'
   id:
     | '__root__'
     | '/'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/set-up/exam-day'
     | '/set-up/schedule'
     | '/quiz/'
+    | '/quiz/$classId_/result/$attemptId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +158,7 @@ export interface RootRouteChildren {
   SetUpExamDayRoute: typeof SetUpExamDayRoute
   SetUpScheduleRoute: typeof SetUpScheduleRoute
   QuizIndexRoute: typeof QuizIndexRoute
+  QuizClassIdResultAttemptIdRoute: typeof QuizClassIdResultAttemptIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotesUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/$classId_/result/$attemptId': {
+      id: '/quiz/$classId_/result/$attemptId'
+      path: '/quiz/$classId/result/$attemptId'
+      fullPath: '/quiz/$classId/result/$attemptId'
+      preLoaderRoute: typeof QuizClassIdResultAttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   SetUpExamDayRoute: SetUpExamDayRoute,
   SetUpScheduleRoute: SetUpScheduleRoute,
   QuizIndexRoute: QuizIndexRoute,
+  QuizClassIdResultAttemptIdRoute: QuizClassIdResultAttemptIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
