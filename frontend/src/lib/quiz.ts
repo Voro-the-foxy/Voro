@@ -1,25 +1,30 @@
 import { ApiError, quizzesApi, type QuizDTO } from "@/lib/api";
 import { latestDocumentIdForClass } from "@/lib/notes";
-import { readJSON, writeJSON } from "@/lib/storage";
 import type { Quiz } from "@/types/quiz";
 
 const QUIZ_CACHE_KEY = "voro.classQuiz.v1";
 
 type ClassQuizMap = Record<string, string>;
 
-const loadCacheMap = (): ClassQuizMap =>
-  readJSON<ClassQuizMap>(QUIZ_CACHE_KEY, {});
+function loadCacheMap(): ClassQuizMap {
+  try {
+    const raw = localStorage.getItem(QUIZ_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
 
-const setCachedQuizId = (classId: string, quizId: string) => {
+function setCachedQuizId(classId: string, quizId: string) {
   const map = loadCacheMap();
   map[classId] = quizId;
-  writeJSON(QUIZ_CACHE_KEY, map);
-};
+  localStorage.setItem(QUIZ_CACHE_KEY, JSON.stringify(map));
+}
 
-const clearCachedQuizId = (classId: string) => {
+export const clearCachedQuizForClass = (classId: string) => {
   const map = loadCacheMap();
   delete map[classId];
-  writeJSON(QUIZ_CACHE_KEY, map);
+  localStorage.setItem(QUIZ_CACHE_KEY, JSON.stringify(map));
 };
 
 const toFrontendQuiz = (
@@ -46,7 +51,7 @@ export const regenerateQuizForClass = async (
   classId: string,
   lectureTitle: string,
 ): Promise<Quiz> => {
-  clearCachedQuizId(classId);
+  clearCachedQuizForClass(classId);
   return loadQuizForClass(classId, lectureTitle);
 };
 
@@ -61,14 +66,13 @@ export const loadQuizForClass = async (
       return toFrontendQuiz(dto, classId, lectureTitle);
     } catch (e) {
       if (!(e instanceof ApiError) || e.status !== 404) throw e;
-      clearCachedQuizId(classId);
-      // fall through to regenerate
+      clearCachedQuizForClass(classId);
     }
   }
 
-  const documentId = latestDocumentIdForClass(classId);
+  const documentId = await latestDocumentIdForClass(classId);
   if (!documentId) {
-    throw new Error("이 강의에 업로드된 자료가 없습니다");
+    throw new Error("No uploaded material found for this class");
   }
 
   const dto = await quizzesApi.create({
@@ -78,7 +82,7 @@ export const loadQuizForClass = async (
     threshold: 0.7,
   });
   if (dto.questions.length === 0) {
-    throw new Error("검증을 통과한 문제가 없습니다 — 자료를 보강하거나 다시 시도해주세요");
+    throw new Error("No questions passed validation — try adding more material or retry");
   }
   setCachedQuizId(classId, dto.id);
   return toFrontendQuiz(dto, classId, lectureTitle);

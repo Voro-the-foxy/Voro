@@ -6,6 +6,7 @@ import { loadQuizForClass } from "@/lib/quiz";
 import { loadClasses } from "@/lib/classes";
 import { ResultSummary } from "@/component/quiz/ResultSummary";
 import { AttemptReview } from "@/component/quiz/AttemptReview";
+import type { QuizAttempt } from "@/types/attempt";
 import type { MultipleChoiceQuestion } from "@/types/quiz";
 
 type QuestionsState =
@@ -20,23 +21,38 @@ function QuizResultPage() {
   const navigate = useNavigate();
 
   const goHome = () => navigate({ to: "/home" });
-  const retry = () =>
-    navigate({ to: "/quiz/$classId", params: { classId } });
+  const retry = () => navigate({ to: "/quiz/$classId", params: { classId } });
 
-  // Synchronous lookups: render an error frame immediately if anything is missing.
-  const attempt = getAttempt(attemptId);
-  const klass = loadClasses().find((c) => c.id === classId);
-  if (!attempt || attempt.classId !== classId) {
-    return <ErrorFrame message="결과를 찾을 수 없습니다" onClose={goHome} />;
+  const [attempt, setAttempt] = useState<QuizAttempt | null | undefined>(undefined);
+  const [lectureName, setLectureName] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([getAttempt(attemptId), loadClasses()])
+      .then(([a, classes]) => {
+        setAttempt(a.classId === classId ? a : null);
+        setLectureName(classes.find((c) => c.id === classId)?.name ?? null);
+      })
+      .catch(() => {
+        setAttempt(null);
+      });
+  }, [attemptId, classId]);
+
+  if (attempt === undefined) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
-  if (!klass) {
-    return <ErrorFrame message="강의를 찾을 수 없습니다" onClose={goHome} />;
+
+  if (!attempt || lectureName === null) {
+    return <ErrorFrame message="Result not found" onClose={goHome} />;
   }
 
   return (
     <ResultBody
       classId={classId}
-      lectureName={klass.name}
+      lectureName={lectureName}
       attempt={attempt}
       onRetry={retry}
       onHome={goHome}
@@ -53,7 +69,7 @@ function ResultBody({
 }: {
   classId: string;
   lectureName: string;
-  attempt: ReturnType<typeof getAttempt> & object;
+  attempt: QuizAttempt;
   onRetry: () => void;
   onHome: () => void;
 }) {
@@ -76,7 +92,7 @@ function ResultBody({
         if (ordered.length === 0) {
           setQuestionsState({
             kind: "error",
-            message: "문제 데이터를 찾을 수 없습니다 (퀴즈 캐시 만료)",
+            message: "Question data not found (quiz cache expired)",
           });
           return;
         }
@@ -85,7 +101,7 @@ function ResultBody({
       .catch((e) => {
         if (cancelled) return;
         const msg =
-          e instanceof Error ? e.message : "결과를 불러오지 못했습니다";
+          e instanceof Error ? e.message : "Failed to load result";
         setQuestionsState({ kind: "error", message: msg });
       });
     return () => {
@@ -112,7 +128,7 @@ function ResultBody({
           </section>
 
           <section className="md:w-1/2 flex flex-col gap-3">
-            <h2 className="text-xs font-medium text-gray-700">문항별 리뷰</h2>
+            <h2 className="text-xs font-medium text-gray-700">Question review</h2>
             {questionsState.kind === "loading" && (
               <div className="flex items-center justify-center py-10">
                 <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
@@ -136,7 +152,7 @@ function ResultBody({
           onClick={onRetry}
           className="w-full py-3 rounded-xl border border-black bg-white text-black text-sm font-medium"
         >
-          다시 풀기
+          Retry
         </button>
         <button
           onClick={onHome}

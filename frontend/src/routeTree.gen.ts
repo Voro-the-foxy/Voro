@@ -9,25 +9,51 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as SettingRouteImport } from './routes/setting'
+import { Route as MypageRouteImport } from './routes/mypage'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuizIndexRouteImport } from './routes/quiz/index'
 import { Route as SetUpScheduleRouteImport } from './routes/set-up/schedule'
+import { Route as SetUpNotesRouteImport } from './routes/set-up/notes'
 import { Route as SetUpExamDayRouteImport } from './routes/set-up/exam-day'
 import { Route as SetUpAlarmRouteImport } from './routes/set-up/alarm'
+import { Route as QuizHistoryRouteImport } from './routes/quiz/history'
 import { Route as QuizClassIdRouteImport } from './routes/quiz/$classId'
 import { Route as NotesUploadRouteImport } from './routes/notes/upload'
 import { Route as QuizClassIdResultAttemptIdRouteImport } from './routes/quiz/$classId_.result.$attemptId'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingRoute = SettingRouteImport.update({
   id: '/setting',
   path: '/setting',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MypageRoute = MypageRouteImport.update({
+  id: '/mypage',
+  path: '/mypage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -45,6 +71,11 @@ const SetUpScheduleRoute = SetUpScheduleRouteImport.update({
   path: '/set-up/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetUpNotesRoute = SetUpNotesRouteImport.update({
+  id: '/set-up/notes',
+  path: '/set-up/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetUpExamDayRoute = SetUpExamDayRouteImport.update({
   id: '/set-up/exam-day',
   path: '/set-up/exam-day',
@@ -53,6 +84,11 @@ const SetUpExamDayRoute = SetUpExamDayRouteImport.update({
 const SetUpAlarmRoute = SetUpAlarmRouteImport.update({
   id: '/set-up/alarm',
   path: '/set-up/alarm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizHistoryRoute = QuizHistoryRouteImport.update({
+  id: '/quiz/history',
+  path: '/quiz/history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizClassIdRoute = QuizClassIdRouteImport.update({
@@ -74,24 +110,36 @@ const QuizClassIdResultAttemptIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
+  '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
+  '/quiz/history': typeof QuizHistoryRoute
   '/set-up/alarm': typeof SetUpAlarmRoute
   '/set-up/exam-day': typeof SetUpExamDayRoute
+  '/set-up/notes': typeof SetUpNotesRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz/': typeof QuizIndexRoute
   '/quiz/$classId/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
+  '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
+  '/quiz/history': typeof QuizHistoryRoute
   '/set-up/alarm': typeof SetUpAlarmRoute
   '/set-up/exam-day': typeof SetUpExamDayRoute
+  '/set-up/notes': typeof SetUpNotesRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz': typeof QuizIndexRoute
   '/quiz/$classId/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
@@ -99,12 +147,18 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/home': typeof HomeRoute
+  '/login': typeof LoginRoute
+  '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
+  '/quiz/history': typeof QuizHistoryRoute
   '/set-up/alarm': typeof SetUpAlarmRoute
   '/set-up/exam-day': typeof SetUpExamDayRoute
+  '/set-up/notes': typeof SetUpNotesRoute
   '/set-up/schedule': typeof SetUpScheduleRoute
   '/quiz/': typeof QuizIndexRoute
   '/quiz/$classId_/result/$attemptId': typeof QuizClassIdResultAttemptIdRoute
@@ -113,36 +167,54 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/home'
+    | '/login'
+    | '/mypage'
     | '/setting'
+    | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
+    | '/quiz/history'
     | '/set-up/alarm'
     | '/set-up/exam-day'
+    | '/set-up/notes'
     | '/set-up/schedule'
     | '/quiz/'
     | '/quiz/$classId/result/$attemptId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/home'
+    | '/login'
+    | '/mypage'
     | '/setting'
+    | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
+    | '/quiz/history'
     | '/set-up/alarm'
     | '/set-up/exam-day'
+    | '/set-up/notes'
     | '/set-up/schedule'
     | '/quiz'
     | '/quiz/$classId/result/$attemptId'
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/home'
+    | '/login'
+    | '/mypage'
     | '/setting'
+    | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
+    | '/quiz/history'
     | '/set-up/alarm'
     | '/set-up/exam-day'
+    | '/set-up/notes'
     | '/set-up/schedule'
     | '/quiz/'
     | '/quiz/$classId_/result/$attemptId'
@@ -150,12 +222,18 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   HomeRoute: typeof HomeRoute
+  LoginRoute: typeof LoginRoute
+  MypageRoute: typeof MypageRoute
   SettingRoute: typeof SettingRoute
+  WelcomeRoute: typeof WelcomeRoute
   NotesUploadRoute: typeof NotesUploadRoute
   QuizClassIdRoute: typeof QuizClassIdRoute
+  QuizHistoryRoute: typeof QuizHistoryRoute
   SetUpAlarmRoute: typeof SetUpAlarmRoute
   SetUpExamDayRoute: typeof SetUpExamDayRoute
+  SetUpNotesRoute: typeof SetUpNotesRoute
   SetUpScheduleRoute: typeof SetUpScheduleRoute
   QuizIndexRoute: typeof QuizIndexRoute
   QuizClassIdResultAttemptIdRoute: typeof QuizClassIdResultAttemptIdRoute
@@ -163,6 +241,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setting': {
       id: '/setting'
       path: '/setting'
@@ -170,11 +255,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mypage': {
+      id: '/mypage'
+      path: '/mypage'
+      fullPath: '/mypage'
+      preLoaderRoute: typeof MypageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/home': {
       id: '/home'
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -198,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SetUpScheduleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/set-up/notes': {
+      id: '/set-up/notes'
+      path: '/set-up/notes'
+      fullPath: '/set-up/notes'
+      preLoaderRoute: typeof SetUpNotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/set-up/exam-day': {
       id: '/set-up/exam-day'
       path: '/set-up/exam-day'
@@ -210,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/set-up/alarm'
       fullPath: '/set-up/alarm'
       preLoaderRoute: typeof SetUpAlarmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz/history': {
+      id: '/quiz/history'
+      path: '/quiz/history'
+      fullPath: '/quiz/history'
+      preLoaderRoute: typeof QuizHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz/$classId': {
@@ -238,12 +358,18 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   HomeRoute: HomeRoute,
+  LoginRoute: LoginRoute,
+  MypageRoute: MypageRoute,
   SettingRoute: SettingRoute,
+  WelcomeRoute: WelcomeRoute,
   NotesUploadRoute: NotesUploadRoute,
   QuizClassIdRoute: QuizClassIdRoute,
+  QuizHistoryRoute: QuizHistoryRoute,
   SetUpAlarmRoute: SetUpAlarmRoute,
   SetUpExamDayRoute: SetUpExamDayRoute,
+  SetUpNotesRoute: SetUpNotesRoute,
   SetUpScheduleRoute: SetUpScheduleRoute,
   QuizIndexRoute: QuizIndexRoute,
   QuizClassIdResultAttemptIdRoute: QuizClassIdResultAttemptIdRoute,

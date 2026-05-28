@@ -59,7 +59,7 @@ export function useQuizSession(
       })
       .catch((e) => {
         if (cancelled) return;
-        const msg = e instanceof Error ? e.message : "퀴즈를 불러오지 못했습니다";
+        const msg = e instanceof Error ? e.message : "Failed to load quiz";
         setState({ kind: "error", message: msg });
       });
     return () => {

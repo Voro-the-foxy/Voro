@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
@@ -66,6 +66,16 @@ def list_documents(db: Session = Depends(get_db)) -> list[DocumentOut]:
         )
         for doc, chunk_count in rows
     ]
+
+
+@router.delete("/documents/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_document(document_id: UUID, db: Session = Depends(get_db)) -> None:
+    doc = db.get(Document, document_id)
+    if doc is None:
+        raise HTTPException(404, "document를 찾을 수 없습니다")
+
+    db.delete(doc)
+    db.commit()
 
 
 def _quiz_to_out(quiz: Quiz, threshold: float | None = None) -> QuizOut:

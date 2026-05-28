@@ -65,13 +65,13 @@ function ReviewRow({
           </p>
           <div className="flex flex-col gap-1">
             <Line
-              label="내 답"
-              text={chosen >= 0 ? question.choices[chosen] : "(미응답)"}
+              label="Your answer"
+              text={chosen >= 0 ? question.choices[chosen] : "(no answer)"}
               tone={ok ? "good" : "bad"}
             />
             {!ok && (
               <Line
-                label="정답"
+                label="Correct"
                 text={question.choices[question.correctIndex]}
                 tone="good"
               />

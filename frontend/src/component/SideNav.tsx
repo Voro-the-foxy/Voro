@@ -1,8 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, BookOpenCheck, Settings } from "lucide-react";
+import { Home, BookOpenCheck, UserRound } from "lucide-react";
+import { isAuthenticated } from "@/lib/auth";
 
 export function SideNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  if (!isAuthenticated() || path === "/login") return null;
 
   return (
     <nav className="hidden md:flex flex-col w-56 shrink-0 border-r border-black bg-white p-4 gap-1">
@@ -20,10 +22,10 @@ export function SideNav() {
         active={path.startsWith("/quiz")}
       />
       <SideNavItem
-        to="/setting"
-        icon={<Settings className="w-5 h-5" />}
-        label="Setting"
-        active={path.startsWith("/setting")}
+        to="/mypage"
+        icon={<UserRound className="w-5 h-5" />}
+        label="Profile"
+        active={path.startsWith("/mypage") || path.startsWith("/setting")}
       />
     </nav>
   );

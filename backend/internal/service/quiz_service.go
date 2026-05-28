@@ -18,6 +18,10 @@ func (s *QuizService) ListDocuments() ([]domain.Document, error) {
 	return s.Repo.ListDocuments()
 }
 
+func (s *QuizService) DeleteDocument(id string) error {
+	return s.Repo.DeleteDocument(id)
+}
+
 func (s *QuizService) CreateQuiz(documentID string, count int, difficulty string, threshold float64) (*domain.Quiz, error) {
 	return s.Repo.CreateQuiz(documentID, count, difficulty, threshold)
 }

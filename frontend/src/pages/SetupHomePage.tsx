@@ -1,25 +1,39 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { loadSetup, type SetupStep } from "@/lib/setup";
+import { loadSetup, checkSetupReadiness, type SetupStep } from "@/lib/setup";
 
 const STEPS: { label: string; to: string; key: SetupStep }[] = [
   { label: "Step1 : set-up your class schedule", to: "/set-up/schedule", key: "schedule" },
   { label: "Step2 : set-up your alarm", to: "/set-up/alarm", key: "alarm" },
   { label: "Step3 : set-up your exam day", to: "/set-up/exam-day", key: "exam" },
+  { label: "Step4 : upload your first note", to: "/set-up/notes", key: "notes" },
 ];
+
+const DEFAULT_SETUP = { schedule: false, alarm: false, exam: false, notes: false };
 
 function SetupHomePage() {
   const navigate = useNavigate();
-  const [setup, setSetup] = useState(loadSetup);
+  const [setup, setSetup] = useState(DEFAULT_SETUP);
+  const [notesComplete, setNotesComplete] = useState(false);
+  const [allDone, setAllDone] = useState(false);
+
+  const reload = async () => {
+    const { zodResult, notesComplete: nc, state } = await checkSetupReadiness().catch(() => ({
+      zodResult: { success: false as const },
+      notesComplete: false,
+      state: DEFAULT_SETUP,
+    }));
+    setSetup(state);
+    setNotesComplete(nc);
+    setAllDone(zodResult.success);
+  };
 
   useEffect(() => {
-    const reload = () => setSetup(loadSetup());
+    void reload();
     window.addEventListener("focus", reload);
     return () => window.removeEventListener("focus", reload);
   }, []);
-
-  const allDone = setup.schedule && setup.alarm && setup.exam;
 
   return (
     <div className="flex flex-col w-full h-full p-4 gap-4">
@@ -33,18 +47,14 @@ function SetupHomePage() {
             style={{ width: 110, height: 120 }}
           />
         </div>
-        <div className="relative mb-6">
-          <div className="px-5 py-3 border border-black rounded-2xl">
-            <span className="text-sm italic">Glad to meet you!</span>
-          </div>
-          <div className="absolute left-[-8px] bottom-3 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[10px] border-r-black" />
-          <div className="absolute left-[-6px] bottom-[13px] w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-r-[9px] border-r-white" />
+        <div className="mb-6 px-5 py-3 border border-black rounded-2xl">
+          <span className="text-sm italic">Glad to meet you!</span>
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
         {STEPS.map((s) => {
-          const done = setup[s.key];
+          const done = s.key === "notes" ? notesComplete : setup[s.key];
           return (
             <button
               key={s.key}

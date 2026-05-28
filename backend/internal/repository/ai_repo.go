@@ -105,6 +105,22 @@ func (r *AIRepository) ListDocuments() ([]domain.Document, error) {
 	return out, nil
 }
 
+func (r *AIRepository) DeleteDocument(id string) error {
+	req, err := http.NewRequest(http.MethodDelete, r.BaseURL+"/api/documents/"+id, nil)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+	resp, err := r.Client.Do(req)
+	if err != nil {
+		return errors.ErrInternalServer
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 400 {
+		return mapStatus(resp)
+	}
+	return nil
+}
+
 func (r *AIRepository) CreateQuiz(documentID string, count int, difficulty string, threshold float64) (*domain.Quiz, error) {
 	body, _ := json.Marshal(aiQuizCreate{
 		DocumentID: documentID,

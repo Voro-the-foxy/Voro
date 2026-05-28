@@ -1,13 +1,13 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Comic Sans MS', 'Comic Sans', cursive;
-  --font-serif: 'Comic Sans MS', 'Comic Sans', cursive;
-  --font-mono: 'Comic Sans MS', 'Comic Sans', cursive;
+  --font-sans: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
+  --font-serif: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
+  --font-mono: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
 }
 
 html,
 body,
 * {
-  font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
+  font-family: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive !important;
 }

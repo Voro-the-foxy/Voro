@@ -1,33 +1,42 @@
-// MOCK IMPLEMENTATION — backed by localStorage.
-// Classes (the user's lecture roster) are persisted in the browser only.
-// Swap each function for the matching `api.*` call once the backend is live.
-import { STORAGE_KEYS, genId, readJSON, writeJSON } from "@/lib/storage";
+import { api } from "@/lib/api";
+import { documentsApi } from "@/lib/api";
 import type { ClassItem } from "@/types/schedule";
 
 export type { ClassItem };
 
-// TODO(backend): GET /api/classes
-//                Response: ClassItem[] = [{ id, name, slots: string[] }]
-//                Slots are timetable cell keys "day-slot" (day 0-6, slot 0-47, 30-min units).
-export const loadClasses = (): ClassItem[] =>
-  readJSON<ClassItem[]>(STORAGE_KEYS.classes, []);
+export const loadClasses = (): Promise<ClassItem[]> =>
+  api.get<ClassItem[]>("/api/classes");
 
-// TODO(backend): PUT /api/classes (bulk replace) — preferred for the timetable editor
-//                Body: ClassItem[]
-//                Response: ClassItem[] (server may reassign ids)
-//                Alternative: per-item POST /api/classes, PUT /api/classes/:id,
-//                DELETE /api/classes/:id during inline edits.
-export const saveClasses = (classes: ClassItem[]) => {
-  writeJSON(STORAGE_KEYS.classes, classes);
-};
+export const saveClasses = (classes: ClassItem[]): Promise<ClassItem[]> =>
+  api.put<ClassItem[]>("/api/classes", classes);
 
-// TODO(backend): POST /api/classes
-//                Body: { name: string, slots?: string[] } (slots default [])
-//                Response: ClassItem with server-assigned id.
-//                Used by UploadNotePage when adding a brand-new lecture.
-export const addClass = (name: string): ClassItem => {
-  const list = loadClasses();
-  const item: ClassItem = { id: genId("c"), name, slots: [] };
-  saveClasses([...list, item]);
-  return item;
+export const addClass = (name: string): Promise<ClassItem> =>
+  api.post<ClassItem>("/api/classes", { name });
+
+export const deleteClass = (classId: string): Promise<void> =>
+  api.del<void>(`/api/classes/${classId}`);
+
+export const deleteClassWithMaterialsDeep = async (
+  classId: string,
+): Promise<{ failedDocumentIds: string[] }> => {
+  const { listNotesByClass } = await import("@/lib/notes");
+  const notes = await listNotesByClass(classId);
+  const documentIds = [
+    ...new Set(
+      notes.map((n) => n.documentId).filter((id): id is string => Boolean(id)),
+    ),
+  ];
+
+  const results = await Promise.allSettled(
+    documentIds.map((id) => documentsApi.delete(id)),
+  );
+  const failedDocumentIds = documentIds.filter(
+    (_, i) => results[i].status === "rejected",
+  );
+
+  await import("@/lib/notes").then((m) => m.deleteNotesByClass(classId));
+  await import("@/lib/attempts").then((m) => m.deleteAttemptsByClass(classId));
+  await deleteClass(classId);
+
+  return { failedDocumentIds };
 };

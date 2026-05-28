@@ -9,6 +9,7 @@ import {
   saveExamsMaster,
 } from '@/lib/exams';
 import type { Exam, Period } from '@/types/exam';
+import { loadClasses } from '@/lib/classes';
 
 const PERIODS: Period[] = ['AM', 'PM'];
 const HOURS: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -18,14 +19,6 @@ const MONTH_NAMES = [
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 ];
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-const SAMPLE_CLASSES = [
-  '인간-컴퓨터 상호작용',
-  '자료구조',
-  '운영체제',
-  '알고리즘',
-  '컴퓨터 네트워크',
-];
 
 const pad = (n: number) => n.toString().padStart(2, '0');
 
@@ -166,122 +159,6 @@ function Calendar({
   );
 }
 
-function ClassSelectModal({
-  classes,
-  onCancel,
-  onSelect,
-}: {
-  classes: string[];
-  onCancel: () => void;
-  onSelect: (name: string) => void;
-}) {
-  return (
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 p-4">
-      <div className="w-full bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-3">
-        <div className="flex items-center justify-between border-b border-black pb-2">
-          <span className="font-medium">Select class..</span>
-          <button type="button" onClick={onCancel} aria-label="Close" className="text-sm">
-            ✕
-          </button>
-        </div>
-        <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
-          {classes.length === 0 ? (
-            <p className="text-center text-sm text-gray-500 py-4">등록된 수업이 없어요.</p>
-          ) : (
-            classes.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => onSelect(c)}
-                className="border border-black rounded-full py-2 text-sm hover:bg-black hover:text-white transition-colors"
-              >
-                {c}
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DateTimePickerModal({
-  initial,
-  onCancel,
-  onSave,
-}: {
-  initial: Exam | null;
-  onCancel: () => void;
-  onSave: (e: Omit<Exam, 'id' | 'className' | 'enabled'>) => void;
-}) {
-  const now = new Date();
-  const [period, setPeriod] = useState<Period>(initial?.period ?? 'AM');
-  const [hour, setHour] = useState<number>(initial?.hour ?? 6);
-  const [minute, setMinute] = useState<number>(initial?.minute ?? 0);
-  const [year, setYear] = useState<number>(initial?.year ?? now.getFullYear());
-  const [month, setMonth] = useState<number>(initial?.month ?? now.getMonth());
-  const [day, setDay] = useState<number>(initial?.day ?? now.getDate());
-
-  const handleNavMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 0) {
-      m = 11;
-      y -= 1;
-    }
-    if (m > 11) {
-      m = 0;
-      y += 1;
-    }
-    const max = daysInMonth(y, m);
-    if (day > max) setDay(max);
-    setMonth(m);
-    setYear(y);
-  };
-
-  const handleSave = () => onSave({ period, hour, minute, year, month, day });
-
-  return (
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 p-4">
-      <div className="w-full bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-3">
-        <div className="flex items-center justify-center gap-2">
-          <Wheel items={PERIODS} value={period} onChange={setPeriod} />
-          <Wheel items={HOURS} value={hour} onChange={setHour} format={pad} />
-          <span className="text-xl font-bold self-center">:</span>
-          <Wheel items={MINUTES} value={minute} onChange={setMinute} format={pad} />
-        </div>
-
-        <div className="border border-black rounded-xl p-2">
-          <Calendar
-            year={year}
-            month={month}
-            selectedDay={day}
-            onSelectDay={setDay}
-            onNavMonth={handleNavMonth}
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 py-2 border border-black rounded-lg text-sm bg-white text-black"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="flex-1 py-2 border border-black rounded-lg text-sm bg-black text-white"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ExamRow({
   exam,
   onDelete,
@@ -314,25 +191,37 @@ function ExamRow({
 export default function ExamSettingPage() {
   const navigate = useNavigate();
   const { from } = useSearch({ from: '/set-up/exam-day' });
-  const [masterEnabled, setMasterEnabled] = useState<boolean>(loadExamsMaster);
-  const [exams, setExams] = useState<Exam[]>(loadExams);
+  const [masterEnabled, setMasterEnabled] = useState<boolean>(true);
+  const [exams, setExams] = useState<Exam[]>([]);
   const [classSelectOpen, setClassSelectOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editing, setEditing] = useState<Exam | null>(null);
   const [pendingClass, setPendingClass] = useState<string | null>(null);
+  const [classNames, setClassNames] = useState<string[]>([]);
 
-  const handleSave = () => {
-    markStepDone('exam');
-    navigate({ to: from === 'setting' ? '/setting' : '/' });
+  const now = new Date();
+  const [period, setPeriod] = useState<Period>('AM');
+  const [hour, setHour] = useState<number>(6);
+  const [minute, setMinute] = useState<number>(0);
+  const [year, setYear] = useState<number>(now.getFullYear());
+  const [month, setMonth] = useState<number>(now.getMonth());
+  const [day, setDay] = useState<number>(now.getDate());
+
+  useEffect(() => {
+    loadExams().then(setExams).catch(() => {});
+    loadExamsMaster().then(setMasterEnabled).catch(() => {});
+    loadClasses().then((cs) => setClassNames(cs.map((c) => c.name))).catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await Promise.all([saveExams(exams), saveExamsMaster(masterEnabled)]);
+      await markStepDone('exam');
+    } catch {
+      // non-blocking: navigate regardless
+    }
+    navigate({ to: from === 'setting' || from === 'mypage' ? '/mypage' : '/welcome' });
   };
-
-  useEffect(() => {
-    saveExams(exams);
-  }, [exams]);
-
-  useEffect(() => {
-    saveExamsMaster(masterEnabled);
-  }, [masterEnabled]);
 
   const openNew = () => {
     setEditing(null);
@@ -343,12 +232,24 @@ export default function ExamSettingPage() {
   const selectClass = (name: string) => {
     setPendingClass(name);
     setClassSelectOpen(false);
+    setPeriod('AM');
+    setHour(6);
+    setMinute(0);
+    setYear(now.getFullYear());
+    setMonth(now.getMonth());
+    setDay(now.getDate());
     setPickerOpen(true);
   };
 
   const openEdit = (e: Exam) => {
     setEditing(e);
     setPendingClass(e.className);
+    setPeriod(e.period);
+    setHour(e.hour);
+    setMinute(e.minute);
+    setYear(e.year);
+    setMonth(e.month);
+    setDay(e.day);
     setPickerOpen(true);
   };
 
@@ -358,18 +259,27 @@ export default function ExamSettingPage() {
     setPendingClass(null);
   };
 
-  const savePicker = (values: Omit<Exam, 'id' | 'className' | 'enabled'>) => {
+  const handleNavMonth = (delta: number) => {
+    let m = month + delta;
+    let y = year;
+    if (m < 0) { m = 11; y -= 1; }
+    if (m > 11) { m = 0; y += 1; }
+    const max = daysInMonth(y, m);
+    if (day > max) setDay(max);
+    setMonth(m);
+    setYear(y);
+  };
+
+  const savePicker = () => {
     if (!pendingClass) return;
+    const values = { period, hour, minute, year, month, day };
     setExams((prev) => {
       if (editing) {
         return prev.map((x) =>
           x.id === editing.id ? { ...x, ...values, className: pendingClass } : x
         );
       }
-      return [
-        ...prev,
-        { id: newExamId(), className: pendingClass, enabled: true, ...values },
-      ];
+      return [...prev, { id: newExamId(), className: pendingClass, enabled: true, ...values }];
     });
     closePicker();
   };
@@ -382,58 +292,120 @@ export default function ExamSettingPage() {
       prev.map((e) => (e.id === id ? { ...e, enabled: !e.enabled } : e))
     );
 
+  const isModal = classSelectOpen || pickerOpen;
+
   return (
     <div className="flex flex-col h-full bg-white text-black">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-black">
-        <h1 className="text-lg font-bold">Exam</h1>
-        <IconButton onClick={openNew} aria-label="Add exam">
-          ＋
-        </IconButton>
-      </div>
-
-      <div className="flex items-center gap-3 px-4 py-2 border border-black rounded-xl mx-3 mt-3 mb-2">
-        <Toggle checked={masterEnabled} onChange={() => setMasterEnabled((v) => !v)} />
-        <span className="text-sm">Alarm setting</span>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        {exams.length === 0 ? (
-          <p className="p-6 text-center text-sm text-gray-500">No exams yet.</p>
-        ) : (
-          exams.map((e) => (
-            <ExamRow
-              key={e.id}
-              exam={e}
-              onDelete={() => remove(e.id)}
-              onToggle={() => toggleExam(e.id)}
-              onClick={() => openEdit(e)}
-            />
-          ))
+      <div className="flex items-center justify-between px-4 py-3 border-b border-black shrink-0">
+        <h1 className="text-lg font-bold">
+          {classSelectOpen ? 'Select Class' : pickerOpen ? 'Set Date & Time' : 'Exam'}
+        </h1>
+        {!isModal && (
+          <IconButton onClick={openNew} aria-label="Add exam">
+            ＋
+          </IconButton>
         )}
       </div>
 
-      <div className="p-3 border-t border-gray-300">
-        <button
-          onClick={handleSave}
-          className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
-        >
-          Save
-        </button>
-      </div>
+      {classSelectOpen ? (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2 p-4">
+            {classNames.length === 0 ? (
+              <p className="text-center text-sm text-gray-500 py-8">No classes registered.</p>
+            ) : (
+              classNames.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => selectClass(c)}
+                  className="border border-black rounded-full py-3 text-sm hover:bg-black hover:text-white transition-colors"
+                >
+                  {c}
+                </button>
+              ))
+            )}
+          </div>
+          <div className="p-4 border-t border-gray-200 shrink-0">
+            <button
+              type="button"
+              onClick={() => setClassSelectOpen(false)}
+              className="w-full py-3 border border-black rounded-xl text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : pickerOpen ? (
+        <div className="flex flex-col flex-1 overflow-y-auto px-4 py-4 gap-4">
+          {pendingClass && (
+            <p className="text-sm font-medium text-center text-gray-700">{pendingClass}</p>
+          )}
+          <div className="flex items-center justify-center gap-2">
+            <Wheel items={PERIODS} value={period} onChange={setPeriod} />
+            <Wheel items={HOURS} value={hour} onChange={setHour} format={pad} />
+            <span className="text-xl font-bold self-center">:</span>
+            <Wheel items={MINUTES} value={minute} onChange={setMinute} format={pad} />
+          </div>
 
-      {classSelectOpen && (
-        <ClassSelectModal
-          classes={SAMPLE_CLASSES}
-          onCancel={() => setClassSelectOpen(false)}
-          onSelect={selectClass}
-        />
-      )}
-      {pickerOpen && (
-        <DateTimePickerModal
-          initial={editing}
-          onCancel={closePicker}
-          onSave={savePicker}
-        />
+          <div className="border border-black rounded-xl p-3">
+            <Calendar
+              year={year}
+              month={month}
+              selectedDay={day}
+              onSelectDay={setDay}
+              onNavMonth={handleNavMonth}
+            />
+          </div>
+
+          <div className="flex gap-2 mt-auto pt-2">
+            <button
+              type="button"
+              onClick={closePicker}
+              className="flex-1 py-3 border border-black rounded-xl text-sm bg-white text-black"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={savePicker}
+              className="flex-1 py-3 border border-black rounded-xl text-sm bg-black text-white"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 px-4 py-2 border border-black rounded-xl mx-3 mt-3 mb-2 shrink-0">
+            <Toggle checked={masterEnabled} onChange={() => setMasterEnabled((v) => !v)} />
+            <span className="text-sm">Enable exam notifications</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {exams.length === 0 ? (
+              <p className="p-6 text-center text-sm text-gray-500">No exams yet.</p>
+            ) : (
+              exams.map((e) => (
+                <ExamRow
+                  key={e.id}
+                  exam={e}
+                  onDelete={() => remove(e.id)}
+                  onToggle={() => toggleExam(e.id)}
+                  onClick={() => openEdit(e)}
+                />
+              ))
+            )}
+          </div>
+
+          <div className="p-3 border-t border-gray-300 shrink-0">
+            <button
+              onClick={handleSave}
+              className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
+            >
+              Save
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

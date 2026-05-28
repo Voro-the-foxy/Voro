@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import QuizSelectPage from "@/pages/QuizSelectPage";
-import { isSetupComplete } from "@/lib/setup";
+import { isAuthenticated } from "@/lib/auth";
 
 export const Route = createFileRoute("/quiz/")({
   beforeLoad: () => {
-    if (!isSetupComplete()) {
-      throw redirect({ to: "/" });
+    if (!isAuthenticated()) {
+      throw redirect({ to: "/login" });
     }
   },
   component: QuizSelectPage,

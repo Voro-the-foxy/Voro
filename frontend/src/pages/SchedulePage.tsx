@@ -1,8 +1,17 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { markStepDone } from "@/lib/setup";
-import { loadClasses, saveClasses } from "@/lib/classes";
+import {
+  deleteClassWithMaterialsDeep,
+  loadClasses,
+  saveClasses,
+} from "@/lib/classes";
 import type { ClassItem } from "@/types/schedule";
+import type { ClassNotifSettings } from "@/types/notificationSettings";
+import {
+  scheduleClassNotifications,
+  requestNotifPermission,
+} from "@/lib/notifications";
 
 import { DAYS } from "@/lib/schedule";
 const SLOTS_PER_DAY = 48;
@@ -30,8 +39,23 @@ function SchedulePage() {
   const navigate = useNavigate();
   const { from } = useSearch({ from: "/set-up/schedule" });
   const [selection, setSelection] = useState<Set<string>>(new Set());
-  const [classes, setClasses] = useState<ClassItem[]>(loadClasses);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSlotsForId, setEditingSlotsForId] = useState<string | null>(
+    null,
+  );
+  const [confirmTarget, setConfirmTarget] = useState<ClassItem | null>(null);
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([]);
+  const notifSettings: ClassNotifSettings = {
+    beforeEnabled: true,
+    afterEnabled: true,
+  };
+
+  useEffect(() => {
+    loadClasses()
+      .then(setClasses)
+      .catch(() => {});
+  }, []);
 
   const isDraggingRef = useRef(false);
   const dragModeRef = useRef<"add" | "remove">("add");
@@ -68,6 +92,28 @@ function SchedulePage() {
   const classOfCell = (key: string) =>
     classes.find((c) => c.slots.includes(key));
 
+  const startEditSlots = (c: ClassItem) => {
+    setEditingSlotsForId(c.id);
+    setSelection(new Set(c.slots));
+    setEditingId(null);
+  };
+
+  const cancelEditSlots = () => {
+    setEditingSlotsForId(null);
+    setSelection(new Set());
+  };
+
+  const updateSlots = () => {
+    if (!editingSlotsForId) return;
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id === editingSlotsForId ? { ...c, slots: [...selection] } : c,
+      ),
+    );
+    setEditingSlotsForId(null);
+    setSelection(new Set());
+  };
+
   const addClass = () => {
     if (selection.size === 0) return;
     const id =
@@ -81,24 +127,48 @@ function SchedulePage() {
     setSelection(new Set());
   };
 
-  const deleteClass = (id: string) => {
-    setClasses(classes.filter((c) => c.id !== id));
+  const deleteClass = () => {
+    if (!confirmTarget) return;
+    const id = confirmTarget.id;
+    setClasses((prev) => prev.filter((c) => c.id !== id));
+    setPendingDeletes((prev) => [...prev, id]);
     if (editingId === id) setEditingId(null);
+    setConfirmTarget(null);
   };
 
   const renameClass = (id: string, name: string) => {
     setClasses(classes.map((c) => (c.id === id ? { ...c, name } : c)));
   };
 
-  const handleSave = () => {
-    saveClasses(classes);
-    markStepDone("schedule");
-    navigate({ to: from === "setting" ? "/setting" : "/" });
+  const handleSave = async () => {
+    try {
+      await Promise.all(
+        pendingDeletes.map((id) => deleteClassWithMaterialsDeep(id)),
+      );
+      await saveClasses(classes);
+      await markStepDone("schedule");
+      await requestNotifPermission();
+      await scheduleClassNotifications(classes, notifSettings);
+    } catch {
+      // non-blocking: navigate regardless
+    }
+    navigate({
+      to:
+        from === "setting" || from === "mypage"
+          ? "/mypage"
+          : from === "upload"
+            ? "/notes/upload"
+            : "/welcome",
+    });
   };
 
   return (
     <div className="flex flex-col h-full select-none">
-      <div className="flex-1 overflow-y-auto">
+      <div
+        className={`flex-1 overflow-y-auto transition-opacity ${
+          confirmTarget ? "opacity-40 pointer-events-none" : ""
+        }`}
+      >
         <div className="sticky top-0 z-10 bg-white grid grid-cols-[32px_repeat(7,minmax(0,1fr))] text-[10px] border-b border-gray-200">
           <div />
           {DAYS.map((d, i) => (
@@ -122,10 +192,13 @@ function SchedulePage() {
                   ? classes.findIndex((c) => c.id === cls.id) %
                     CLASS_COLORS.length
                   : -1;
+                const isEditingTarget = cls?.id === editingSlotsForId;
                 const bg = isSelected
                   ? "bg-sky-400"
                   : cls
-                    ? CLASS_COLORS[colorIdx]
+                    ? isEditingTarget
+                      ? "bg-sky-200"
+                      : CLASS_COLORS[colorIdx]
                     : "bg-white";
                 const borderT =
                   slot % 2 === 0
@@ -145,17 +218,36 @@ function SchedulePage() {
         </div>
 
         <div className="flex flex-col gap-2 p-3 border-t border-gray-200">
+          {editingSlotsForId && (
+            <div className="flex items-center gap-2 px-2 py-2 mb-1 bg-sky-50 border border-sky-300 rounded text-xs text-sky-800">
+              <span className="flex-1">
+                Editing slots for{" "}
+                <strong>
+                  {classes.find((c) => c.id === editingSlotsForId)?.name}
+                </strong>{" "}
+                — drag on the grid
+              </span>
+              <button
+                onClick={cancelEditSlots}
+                className="px-2 py-1 border border-sky-400 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           {classes.map((c, idx) => {
             const color = CLASS_COLORS[idx % CLASS_COLORS.length];
+            const isEditingSlots = editingSlotsForId === c.id;
             return (
-              <div key={c.id} className="flex items-center gap-1">
+              <div
+                key={c.id}
+                className={`flex items-center gap-1 ${isEditingSlots ? "ring-1 ring-sky-400 rounded" : ""}`}
+              >
                 <button
                   className="px-2 py-1 border border-gray-300 rounded text-xs"
-                  onClick={() =>
-                    setEditingId(editingId === c.id ? null : c.id)
-                  }
+                  onClick={() => setEditingId(editingId === c.id ? null : c.id)}
                 >
-                  수정
+                  Rename
                 </button>
                 {editingId === c.id ? (
                   <input
@@ -173,37 +265,76 @@ function SchedulePage() {
                     <span className={`w-3 h-3 rounded-full ${color}`} />
                     <span className="truncate">{c.name}</span>
                     <span className="ml-auto text-[10px] text-gray-500">
-                      {c.slots.length * 30}분
+                      {isEditingSlots
+                        ? `${selection.size * 30} min`
+                        : `${c.slots.length * 30} min`}
                     </span>
                   </div>
                 )}
                 <button
-                  className="px-2 py-1 border border-gray-300 rounded text-xs text-red-500"
-                  onClick={() => deleteClass(c.id)}
+                  className={`px-2 py-1 border rounded text-xs ${isEditingSlots ? "border-sky-500 bg-sky-500 text-white" : "border-gray-300 text-gray-600"}`}
+                  onClick={() =>
+                    isEditingSlots ? updateSlots() : startEditSlots(c)
+                  }
                 >
-                  삭제
+                  {isEditingSlots ? "Done" : "Edit"}
+                </button>
+                <button
+                  className="px-2 py-1 border border-gray-300 rounded text-xs text-red-500"
+                  onClick={() => setConfirmTarget(c)}
+                >
+                  Del
                 </button>
               </div>
             );
           })}
-          <button
-            className="border border-dashed border-gray-400 rounded py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-            onClick={addClass}
-            disabled={selection.size === 0}
-          >
-            + Add Class{selection.size > 0 && ` (${selection.size}칸)`}
-          </button>
+          {!editingSlotsForId && (
+            <button
+              className="border border-dashed border-gray-400 rounded py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={addClass}
+              disabled={selection.size === 0}
+            >
+              + Add Class{selection.size > 0 && ` (${selection.size} slots)`}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="p-3 border-t border-gray-300">
-        <button
-          onClick={handleSave}
-          className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
-        >
-          Save
-        </button>
-      </div>
+      {confirmTarget ? (
+        <div className="shrink-0 border-t-2 border-black bg-white px-5 pt-4 pb-6 flex flex-col gap-3">
+          <p className="text-sm font-medium">Delete this class?</p>
+          <p className="text-xs leading-relaxed text-gray-600">
+            All notes and quiz records linked to {confirmTarget.name} will also
+            be deleted.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmTarget(null)}
+              className="h-11 rounded-xl border border-gray-300 text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={deleteClass}
+              className="h-11 rounded-xl border border-red-600 bg-red-600 text-sm text-white"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="p-3 border-t border-gray-300 shrink-0">
+          <button
+            onClick={handleSave}
+            disabled={classes.length === 0}
+            className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Save
+          </button>
+        </div>
+      )}
     </div>
   );
 }

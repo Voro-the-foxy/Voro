@@ -9,25 +9,14 @@ import (
 	"nomilk/backend/internal/shared/errors"
 )
 
+
+
 type QuizHandler struct {
 	Service *service.QuizService
 }
 
 const maxUploadSize = 50 << 20 // 50 MiB
 
-func writeError(w http.ResponseWriter, err error) {
-	if appErr, ok := err.(*errors.AppError); ok {
-		http.Error(w, appErr.Message, appErr.Code)
-		return
-	}
-	http.Error(w, err.Error(), http.StatusInternalServerError)
-}
-
-func writeJSON(w http.ResponseWriter, status int, payload any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(payload)
-}
 
 func (h *QuizHandler) UploadDocument(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
@@ -54,6 +43,19 @@ func (h *QuizHandler) ListDocuments(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+func (h *QuizHandler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		writeError(w, errors.ErrInvalidRequest)
+		return
+	}
+	if err := h.Service.DeleteDocument(id); err != nil {
+		writeError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *QuizHandler) CreateQuiz(w http.ResponseWriter, r *http.Request) {

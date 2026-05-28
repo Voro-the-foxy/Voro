@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import UploadNotePage from "@/pages/UploadNotePage";
-import { isSetupComplete } from "@/lib/setup";
+import { isAuthenticated } from "@/lib/auth";
 
 export const Route = createFileRoute("/notes/upload")({
   beforeLoad: () => {
-    if (!isSetupComplete()) {
-      throw redirect({ to: "/" });
+    if (!isAuthenticated()) {
+      throw redirect({ to: "/login" });
     }
   },
   component: UploadNotePage,

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Voro</string>
+    <string name="title_activity_main">Voro</string>
+    <string name="package_name">com.voro.app</string>
+    <string name="custom_url_scheme">com.voro.app</string>
+</resources>

@@ -1,36 +1,40 @@
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import { useEffect, useState, type ButtonHTMLAttributes } from 'react';
-import { markStepDone } from '@/lib/setup';
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState, type ButtonHTMLAttributes } from "react";
+import { markStepDone } from "@/lib/setup";
 import {
   loadAlarms,
   loadAlarmsMaster,
   newAlarmId,
   saveAlarms,
   saveAlarmsMaster,
-} from '@/lib/alarms';
-import type { Alarm, DayKey, Period } from '@/types/alarm';
+} from "@/lib/alarms";
+import type { Alarm, DayKey, Period } from "@/types/alarm";
 
-const DAYS: DayKey[] = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-const PERIODS: Period[] = ['AM', 'PM'];
+const DAYS: DayKey[] = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const PERIODS: Period[] = ["AM", "PM"];
 const HOURS: number[] = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES: number[] = Array.from({ length: 60 }, (_, i) => i);
 
-const DEFAULT_ALARM: Omit<Alarm, 'id'> = {
+const DEFAULT_ALARM: Omit<Alarm, "id"> = {
   hour: 6,
   minute: 0,
-  period: 'AM',
+  period: "AM",
   days: [],
   enabled: true,
 };
 
-const pad = (n: number) => n.toString().padStart(2, '0');
+const pad = (n: number) => n.toString().padStart(2, "0");
 
 type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  size?: 'sm' | 'md';
+  size?: "sm" | "md";
 };
 
-function IconButton({ size = 'md', className = '', ...props }: IconButtonProps) {
-  const sizeCls = size === 'sm' ? 'w-6 h-6 text-xs' : 'w-8 h-8 text-lg';
+function IconButton({
+  size = "md",
+  className = "",
+  ...props
+}: IconButtonProps) {
+  const sizeCls = size === "sm" ? "w-6 h-6 text-xs" : "w-8 h-8 text-lg";
   return (
     <button
       type="button"
@@ -40,7 +44,13 @@ function IconButton({ size = 'md', className = '', ...props }: IconButtonProps) 
   );
 }
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+function Toggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: () => void;
+}) {
   return (
     <button
       type="button"
@@ -51,11 +61,11 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
         onChange();
       }}
       className={`flex items-center w-10 h-5 p-[2px] rounded-full border border-black transition-colors ${
-        checked ? 'bg-black justify-end' : 'bg-white justify-start'
+        checked ? "bg-black justify-end" : "bg-white justify-start"
       }`}
     >
       <span
-        className={`w-3.5 h-3.5 rounded-full ${checked ? 'bg-white' : 'bg-black'}`}
+        className={`w-3.5 h-3.5 rounded-full ${checked ? "bg-white" : "bg-black"}`}
       />
     </button>
   );
@@ -115,77 +125,11 @@ function DayChip({
       onClick={onClick}
       aria-pressed={active}
       className={`w-8 h-8 rounded-full border border-black text-xs font-medium transition-colors ${
-        active ? 'bg-black text-white' : 'bg-white text-black'
+        active ? "bg-black text-white" : "bg-white text-black"
       }`}
     >
       {day[0]}
     </button>
-  );
-}
-
-function TimePickerModal({
-  initial,
-  onCancel,
-  onSave,
-}: {
-  initial: Alarm | null;
-  onCancel: () => void;
-  onSave: (a: Alarm) => void;
-}) {
-  const [period, setPeriod] = useState<Period>(initial?.period ?? DEFAULT_ALARM.period);
-  const [hour, setHour] = useState<number>(initial?.hour ?? DEFAULT_ALARM.hour);
-  const [minute, setMinute] = useState<number>(initial?.minute ?? DEFAULT_ALARM.minute);
-  const [days, setDays] = useState<DayKey[]>(initial?.days ?? DEFAULT_ALARM.days);
-
-  const toggleDay = (d: DayKey) =>
-    setDays((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d]));
-
-  const handleSave = () => {
-    onSave({
-      ...DEFAULT_ALARM,
-      ...initial,
-      id: initial?.id ?? newAlarmId(),
-      period,
-      hour,
-      minute,
-      days,
-    });
-  };
-
-  return (
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-20 p-4">
-      <div className="w-full bg-white border-2 border-black rounded-2xl p-4 flex flex-col gap-4">
-        <div className="flex items-center justify-center gap-2">
-          <Wheel items={PERIODS} value={period} onChange={setPeriod} />
-          <Wheel items={HOURS} value={hour} onChange={setHour} format={pad} />
-          <span className="text-xl font-bold self-center">:</span>
-          <Wheel items={MINUTES} value={minute} onChange={setMinute} format={pad} />
-        </div>
-
-        <div className="flex justify-between">
-          {DAYS.map((d) => (
-            <DayChip key={d} day={d} active={days.includes(d)} onClick={() => toggleDay(d)} />
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 py-2 border border-black rounded-lg text-sm bg-white text-black"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="flex-1 py-2 border border-black rounded-lg text-sm bg-black text-white"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -220,7 +164,11 @@ function AlarmRow({
           {DAYS.map((d) => (
             <span
               key={d}
-              className={alarm.days.includes(d) ? 'font-bold text-black' : 'text-gray-400'}
+              className={
+                alarm.days.includes(d)
+                  ? "font-bold text-black"
+                  : "text-gray-400"
+              }
             >
               {d[0]}
             </span>
@@ -233,34 +181,60 @@ function AlarmRow({
 }
 
 export default function AlarmPage() {
-  const [masterEnabled, setMasterEnabled] = useState<boolean>(loadAlarmsMaster);
-  const [alarms, setAlarms] = useState<Alarm[]>(loadAlarms);
+  const [masterEnabled, setMasterEnabled] = useState<boolean>(true);
+  const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editing, setEditing] = useState<Alarm | null>(null);
   const navigate = useNavigate();
-  const { from } = useSearch({ from: '/set-up/alarm' });
+  const { from } = useSearch({ from: "/set-up/alarm" });
+
+  const [period, setPeriod] = useState<Period>(DEFAULT_ALARM.period);
+  const [hour, setHour] = useState<number>(DEFAULT_ALARM.hour);
+  const [minute, setMinute] = useState<number>(DEFAULT_ALARM.minute);
+  const [days, setDays] = useState<DayKey[]>(DEFAULT_ALARM.days);
 
   useEffect(() => {
-    saveAlarms(alarms);
-  }, [alarms]);
-
-  useEffect(() => {
-    saveAlarmsMaster(masterEnabled);
-  }, [masterEnabled]);
+    loadAlarms()
+      .then(setAlarms)
+      .catch(() => {});
+    loadAlarmsMaster()
+      .then(setMasterEnabled)
+      .catch(() => {});
+  }, []);
 
   const openNew = () => {
     setEditing(null);
+    setPeriod(DEFAULT_ALARM.period);
+    setHour(DEFAULT_ALARM.hour);
+    setMinute(DEFAULT_ALARM.minute);
+    setDays(DEFAULT_ALARM.days);
     setPickerOpen(true);
   };
 
   const openEdit = (a: Alarm) => {
     setEditing(a);
+    setPeriod(a.period);
+    setHour(a.hour);
+    setMinute(a.minute);
+    setDays(a.days);
     setPickerOpen(true);
   };
 
-  const close = () => setPickerOpen(false);
+  const close = () => {
+    setPickerOpen(false);
+    setEditing(null);
+  };
 
-  const save = (a: Alarm) => {
+  const savePicker = () => {
+    const a: Alarm = {
+      ...DEFAULT_ALARM,
+      ...editing,
+      id: editing?.id ?? newAlarmId(),
+      period,
+      hour,
+      minute,
+      days,
+    };
     setAlarms((prev) => {
       const i = prev.findIndex((x) => x.id === a.id);
       if (i >= 0) {
@@ -271,35 +245,52 @@ export default function AlarmPage() {
       return [...prev, a];
     });
     setPickerOpen(false);
+    setEditing(null);
   };
 
-  const remove = (id: string) => setAlarms((prev) => prev.filter((a) => a.id !== id));
+  const toggleDay = (d: DayKey) =>
+    setDays((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d]));
+
+  const remove = (id: string) =>
+    setAlarms((prev) => prev.filter((a) => a.id !== id));
 
   const toggleAlarm = (id: string) =>
-    setAlarms((prev) => prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a)));
+    setAlarms((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a)),
+    );
 
-  const handleSave = () => {
-    markStepDone('alarm');
-    navigate({ to: from === 'setting' ? '/setting' : '/' });
+  const handleSave = async () => {
+    try {
+      await Promise.all([saveAlarms(alarms), saveAlarmsMaster(masterEnabled)]);
+      await markStepDone("alarm");
+    } catch {
+      // non-blocking: navigate regardless
+    }
+    navigate({ to: from === "setting" || from === "mypage" ? "/mypage" : "/welcome" });
   };
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-black">
+    <div className="relative flex flex-col h-full bg-white text-black">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-black shrink-0">
         <h1 className="text-lg font-bold">Alarm Setting</h1>
         <IconButton onClick={openNew} aria-label="Add alarm">
           ＋
         </IconButton>
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-300">
-        <Toggle checked={masterEnabled} onChange={() => setMasterEnabled((v) => !v)} />
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-300 shrink-0">
+        <Toggle
+          checked={masterEnabled}
+          onChange={() => setMasterEnabled((v) => !v)}
+        />
         <span className="text-sm">Alarm setting</span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {alarms.length === 0 ? (
-          <p className="p-6 text-center text-sm text-gray-500">No alarms yet.</p>
+          <p className="p-6 text-center text-sm text-gray-500">
+            No alarms yet.
+          </p>
         ) : (
           alarms.map((a) => (
             <AlarmRow
@@ -313,7 +304,7 @@ export default function AlarmPage() {
         )}
       </div>
 
-      <div className="p-3 border-t border-gray-300">
+      <div className="p-3 border-t border-gray-300 shrink-0">
         <button
           onClick={handleSave}
           className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
@@ -322,7 +313,66 @@ export default function AlarmPage() {
         </button>
       </div>
 
-      {pickerOpen && <TimePickerModal initial={editing} onCancel={close} onSave={save} />}
+      {pickerOpen && (
+        <div
+          className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4"
+          onClick={close}
+        >
+          <div
+            className="w-full max-w-sm bg-white border border-black rounded-2xl flex flex-col p-5 gap-6 shadow-xl max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center font-bold text-base border-b border-gray-200 pb-2">
+              {editing ? "Edit Alarm" : "New Alarm"}
+            </div>
+
+            <div className="flex items-center justify-center gap-2 py-2">
+              <Wheel items={PERIODS} value={period} onChange={setPeriod} />
+              <Wheel
+                items={HOURS}
+                value={hour}
+                onChange={setHour}
+                format={pad}
+              />
+              <span className="text-xl font-bold self-center">:</span>
+              <Wheel
+                items={MINUTES}
+                value={minute}
+                onChange={setMinute}
+                format={pad}
+              />
+            </div>
+
+            <div className="flex justify-between px-1">
+              {DAYS.map((d) => (
+                <DayChip
+                  key={d}
+                  day={d}
+                  active={days.includes(d)}
+                  onClick={() => toggleDay(d)}
+                />
+              ))}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={close}
+                className="flex-1 py-2.5 border border-black rounded-xl text-sm bg-white text-black hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={savePicker}
+                className="flex-1 py-2.5 border border-black rounded-xl text-sm bg-black text-white hover:bg-gray-900 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

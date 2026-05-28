@@ -1,10 +1,11 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { X, ChevronRight } from "lucide-react";
+import { X, ChevronRight, History } from "lucide-react";
 import { BottomNav } from "@/component/BottomNav";
 import { loadClasses, type ClassItem } from "@/lib/classes";
 import { latestDocumentIdForClass } from "@/lib/notes";
 import { hasCachedQuiz } from "@/lib/quiz";
-import { loadSolvedQuizzes } from "@/lib/solvedQuizzes";
+import { loadSolvedQuizzesByClass } from "@/lib/solvedQuizzes";
 
 type Row = {
   klass: ClassItem;
@@ -13,24 +14,31 @@ type Row = {
   solved: number;
 };
 
-function buildRows(): Row[] {
-  const solvedByClass = loadSolvedQuizzes().reduce<Record<string, number>>(
-    (acc, s) => {
-      acc[s.classId] = (acc[s.classId] ?? 0) + 1;
-      return acc;
-    },
-    {},
-  );
-  return loadClasses().map((klass) => ({
-    klass,
-    hasDocument: latestDocumentIdForClass(klass.id) !== undefined,
-    hasQuiz: hasCachedQuiz(klass.id),
-    solved: solvedByClass[klass.id] ?? 0,
-  }));
-}
-
 function QuizSelectPage() {
-  const rows = buildRows();
+  const [rows, setRows] = useState<Row[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const classes = await loadClasses();
+        const rowData = await Promise.all(
+          classes.map(async (klass) => {
+            const [docId, solved] = await Promise.all([
+              latestDocumentIdForClass(klass.id),
+              loadSolvedQuizzesByClass(klass.id),
+            ]);
+            return {
+              klass,
+              hasDocument: Boolean(docId),
+              hasQuiz: hasCachedQuiz(klass.id),
+              solved: solved.length,
+            };
+          }),
+        );
+        setRows(rowData);
+      } catch {}
+    })();
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-white text-black">
@@ -42,9 +50,14 @@ function QuizSelectPage() {
               pick a deck to drill
             </p>
           </div>
-          <Link to="/home" aria-label="Close" className="p-1 -mr-1">
-            <X className="w-5 h-5" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link to="/quiz/history" aria-label="History" className="p-1">
+              <History className="w-5 h-5" />
+            </Link>
+            <Link to="/home" aria-label="Close" className="p-1 -mr-1">
+              <X className="w-5 h-5" />
+            </Link>
+          </div>
         </div>
         <div className="border-b border-black mt-3" />
 
@@ -76,9 +89,9 @@ function QuizSelectPage() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 mt-12 text-center">
-      <p className="text-sm text-gray-700">아직 등록된 강의가 없어요.</p>
+      <p className="text-sm text-gray-700">No lectures yet.</p>
       <p className="text-xs text-gray-500">
-        먼저 자료(PDF)를 업로드해서 강의를 추가하세요.
+        Upload a PDF to add your first lecture.
       </p>
       <Link
         to="/notes/upload"

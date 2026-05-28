@@ -1,38 +1,37 @@
-// MOCK IMPLEMENTATION — backed by localStorage.
-// All functions below operate on browser storage, not a real server. They
-// simulate the eventual API surface; swap them for `api.*` calls per the
-// TODO(backend) markers when the backend is ready.
-import { STORAGE_KEYS, readJSON, writeJSON } from "@/lib/storage";
+import { api } from "@/lib/api";
+import { loadClasses } from "@/lib/classes";
+import { listNotesByClass } from "@/lib/notes";
+import { SetupReadinessSchema } from "@/lib/validation";
 import type { SetupState, SetupStep } from "@/types/setup";
 
 export type { SetupState, SetupStep };
 
-const DEFAULT: SetupState = {
-  schedule: false,
-  alarm: false,
-  exam: false,
+export const loadSetup = (): Promise<SetupState> =>
+  api.get<SetupState>("/api/setup");
+
+export const markStepDone = (step: SetupStep): Promise<SetupState> =>
+  api.post<SetupState>("/api/setup/steps", { step });
+
+export const checkSetupReadiness = async () => {
+  const [state, allClasses] = await Promise.all([loadSetup(), loadClasses()]);
+  const scheduled = allClasses.filter((c) => c.slots.length > 0);
+  const classes = await Promise.all(
+    scheduled.map(async (c) => {
+      const notes = await listNotesByClass(c.id);
+      return { id: c.id, name: c.name, slots: c.slots, noteCount: notes.length };
+    }),
+  );
+  const notesComplete =
+    scheduled.length > 0 && classes.every((c) => c.noteCount >= 1);
+  const zodResult = SetupReadinessSchema.safeParse({ ...state, classes });
+  return { zodResult, notesComplete, state };
 };
 
-// TODO(backend): GET /api/users/me/setup
-//                Response: SetupState { schedule, alarm, exam } (booleans).
-//                Auth: requires session/JWT in header.
-export const loadSetup = (): SetupState => {
-  const stored = readJSON<Partial<SetupState>>(STORAGE_KEYS.setup, {});
-  return { ...DEFAULT, ...stored };
-};
-
-// TODO(backend): POST /api/users/me/setup/steps
-//                Body: { step: 'schedule' | 'alarm' | 'exam' }
-//                Response: updated SetupState.
-export const markStepDone = (step: SetupStep) => {
-  const s = loadSetup();
-  s[step] = true;
-  writeJSON(STORAGE_KEYS.setup, s);
-};
-
-// Derived from loadSetup; no separate endpoint needed unless backend
-// wants to expose a precomputed flag.
-export const isSetupComplete = () => {
-  const s = loadSetup();
-  return s.schedule && s.alarm && s.exam;
+export const isSetupComplete = async (): Promise<boolean> => {
+  try {
+    const { zodResult } = await checkSetupReadiness();
+    return zodResult.success;
+  } catch {
+    return false;
+  }
 };

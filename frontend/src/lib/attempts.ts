@@ -1,8 +1,4 @@
-// Repository for quiz attempts.
-// Backed by localStorage today; swap the body of the functions below
-// for `api.*` calls when the backend exposes /api/attempts.
-import { STORAGE_KEYS, genId, readJSON, writeJSON } from "@/lib/storage";
-import { addSolvedQuiz } from "@/lib/solvedQuizzes";
+import { api } from "@/lib/api";
 import type { QuizAttempt } from "@/types/attempt";
 
 export type { QuizAttempt };
@@ -12,44 +8,59 @@ export type SaveAttemptInput = Omit<QuizAttempt, "id" | "completedAt" | "score" 
   total?: number;
 };
 
-const loadAll = (): QuizAttempt[] =>
-  readJSON<QuizAttempt[]>(STORAGE_KEYS.attempts, []);
-
-export const listAttempts = (): QuizAttempt[] => loadAll();
-
-export const listAttemptsByClass = (classId: string): QuizAttempt[] =>
-  loadAll()
-    .filter((a) => a.classId === classId)
-    .sort((a, b) => b.completedAt - a.completedAt);
-
-export const getAttempt = (id: string): QuizAttempt | undefined =>
-  loadAll().find((a) => a.id === id);
-
-export const latestAttemptForClass = (classId: string): QuizAttempt | undefined =>
-  listAttemptsByClass(classId)[0];
-
-export const saveAttempt = (input: SaveAttemptInput): QuizAttempt => {
-  const total = input.total ?? input.questionIds.length;
-  const score =
-    input.score ??
-    input.answers.reduce(
-      (acc, ans, i) => (ans === input.correctIndices[i] ? acc + 1 : acc),
-      0,
-    );
-  const created: QuizAttempt = {
-    id: genId("a"),
-    classId: input.classId,
-    quizId: input.quizId,
-    lectureTitle: input.lectureTitle,
-    questionIds: input.questionIds,
-    answers: input.answers,
-    correctIndices: input.correctIndices,
-    score,
-    total,
-    completedAt: Date.now(),
-  };
-  writeJSON(STORAGE_KEYS.attempts, [...loadAll(), created]);
-  // Keep the legacy "solved" counter in sync so HomePage stats still work.
-  addSolvedQuiz(input.classId);
-  return created;
+type AttemptDTO = {
+  id: string;
+  class_id: string;
+  quiz_id: string;
+  lecture_title: string;
+  question_ids: string[];
+  answers: number[];
+  correct_indices: number[];
+  score: number;
+  total: number;
+  completed_at: number;
 };
+
+const fromDTO = (dto: AttemptDTO): QuizAttempt => ({
+  id: dto.id,
+  classId: dto.class_id,
+  quizId: dto.quiz_id,
+  lectureTitle: dto.lecture_title,
+  questionIds: dto.question_ids,
+  answers: dto.answers,
+  correctIndices: dto.correct_indices,
+  score: dto.score,
+  total: dto.total,
+  completedAt: dto.completed_at,
+});
+
+export const listAttempts = (): Promise<QuizAttempt[]> =>
+  api.get<AttemptDTO[]>("/api/attempts").then((dtos) => dtos.map(fromDTO));
+
+export const listAttemptsByClass = (classId: string): Promise<QuizAttempt[]> =>
+  api.get<AttemptDTO[]>(`/api/attempts?classId=${encodeURIComponent(classId)}`).then((dtos) => dtos.map(fromDTO));
+
+export const getAttempt = (id: string): Promise<QuizAttempt> =>
+  api.get<AttemptDTO>(`/api/attempts/${id}`).then(fromDTO);
+
+export const latestAttemptForClass = async (
+  classId: string,
+): Promise<QuizAttempt | undefined> => {
+  const list = await listAttemptsByClass(classId);
+  return list.sort((a, b) => b.completedAt - a.completedAt)[0];
+};
+
+export const deleteAttemptsByClass = (classId: string): Promise<void> =>
+  api.del<void>(`/api/attempts?classId=${encodeURIComponent(classId)}`);
+
+export const saveAttempt = (input: SaveAttemptInput): Promise<QuizAttempt> =>
+  api.post<AttemptDTO>("/api/attempts", {
+    class_id: input.classId,
+    quiz_id: input.quizId,
+    lecture_title: input.lectureTitle,
+    question_ids: input.questionIds,
+    answers: input.answers,
+    correct_indices: input.correctIndices,
+    score: input.score,
+    total: input.total,
+  }).then(fromDTO);

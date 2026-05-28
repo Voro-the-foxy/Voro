@@ -7,40 +7,30 @@ import { BottomNav } from "@/component/BottomNav";
 import { loadNotes } from "@/lib/notes";
 import { loadSolvedQuizzes } from "@/lib/solvedQuizzes";
 
-// MOCK: Home dashboard mixes localStorage-derived counts (devouredNotes,
-// solvedQuizzes) with hardcoded values (streak, fox message, quiz progress).
-// All of these should come from a single backend call — see TODO(backend) below.
 function HomePage() {
-  // TODO(backend): GET /api/users/me/home
-  //                Response: { streakDays, devouredNotes, solvedQuizzes,
-  //                  quizProgress: { currentStep, totalSteps },
-  //                  foxMessage: string }
-  //                Single endpoint that aggregates the home dashboard so we can
-  //                drop the per-domain calls below. devouredNotes/solvedQuizzes
-  //                here are temporary client-side counts.
-  const [devouredNotes] = useState(() => loadNotes().length);
-  const [solvedQuizzes] = useState(() => loadSolvedQuizzes().length);
-  // MOCK: hardcoded quiz path progress.
-  // TODO(backend): currentStep/totalSteps come from the user's quiz path on the
-  //                server (e.g. enrolled curriculum). Replace with API value.
-  const totalSteps = 12;
-  const currentStep = Math.min(solvedQuizzes + 1, totalSteps + 1);
+  const [devouredNotes, setDevouredNotes] = useState(0);
+  const [solvedQuizzes, setSolvedQuizzes] = useState(0);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [notes, solved] = await Promise.all([
+          loadNotes(),
+          loadSolvedQuizzes(),
+        ]);
+        setDevouredNotes(notes.length);
+        setSolvedQuizzes(solved.length);
+      } catch {}
+    })();
+  }, []);
+
   return (
     <div className="flex flex-col h-full bg-white text-black">
-      <div className="flex-1 overflow-y-auto">
-        {/* MOCK: streak driven by solved quiz count (starts at 0, +1 per solve).
-            TODO(backend): streak days come from /api/users/me/home.streakDays */}
-        <StreakBadge days={solvedQuizzes} />
-        {/* MOCK: hardcoded fox message.
-            TODO(backend): fox message comes from /api/users/me/home.foxMessage
-            (motivational copy or contextual nudge generated server-side) */}
-        <FoxIntro message="I`m voro!!" />
-        <StatRow devouredNotes={devouredNotes} solvedQuizzes={solvedQuizzes} />
-        <ProgressSplit
-          bookCount={devouredNotes}
-          currentStep={currentStep}
-          totalSteps={totalSteps}
-        />
+      <StreakBadge days={solvedQuizzes} />
+      <FoxIntro message="I`m voro!!" />
+      <StatRow devouredNotes={devouredNotes} solvedQuizzes={solvedQuizzes} />
+      <div className="flex-1 mt-6 border-t border-black overflow-hidden">
+        <BookStack count={devouredNotes} />
       </div>
       <BottomNav active="home" />
     </div>
@@ -134,26 +124,6 @@ function StatTile({
   );
 }
 
-function ProgressSplit({
-  bookCount,
-  currentStep,
-  totalSteps,
-}: {
-  bookCount: number;
-  currentStep: number;
-  totalSteps: number;
-}) {
-  return (
-    <div className="grid grid-cols-2 mt-6 border-t border-black h-[280px]">
-      <div className="border-r border-black overflow-hidden">
-        <BookStack count={bookCount} />
-      </div>
-      <div className="overflow-hidden">
-        <QuizPath currentStep={currentStep} totalSteps={totalSteps} />
-      </div>
-    </div>
-  );
-}
 
 function BookStack({ count }: { count: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -247,113 +217,5 @@ function BookStack({ count }: { count: number }) {
   return <div ref={containerRef} className="relative w-full h-full" />;
 }
 
-function QuizPath({
-  currentStep,
-  totalSteps,
-}: {
-  currentStep: number;
-  totalSteps: number;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const currentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const c = currentRef.current;
-    if (!c) return;
-    c.scrollIntoView({ block: "center", behavior: "auto" });
-  }, [currentStep]);
-
-  const nodeSpacing = 64;
-  const verticalPadding = 16;
-  const totalHeight = totalSteps * nodeSpacing + verticalPadding * 2;
-
-  const positionFor = (i: number) => {
-    const top = verticalPadding + i * nodeSpacing;
-    const isRight = i % 2 === 0;
-    const left = isRight ? 56 : 8;
-    return { top, left, isRight };
-  };
-
-  return (
-    <div
-      ref={containerRef}
-      className="relative w-full h-full overflow-y-auto px-2 py-2"
-    >
-      <div className="relative w-full" style={{ height: totalHeight }}>
-        <svg
-          className="absolute inset-0 w-full pointer-events-none"
-          style={{ height: totalHeight }}
-        >
-          <defs>
-            <marker
-              id="arrow-done"
-              markerWidth="6"
-              markerHeight="6"
-              refX="3"
-              refY="3"
-              orient="auto"
-            >
-              <path d="M0,0 L6,3 L0,6 z" fill="black" />
-            </marker>
-            <marker
-              id="arrow-todo"
-              markerWidth="6"
-              markerHeight="6"
-              refX="3"
-              refY="3"
-              orient="auto"
-            >
-              <path d="M0,0 L6,3 L0,6 z" fill="#9ca3af" />
-            </marker>
-          </defs>
-          {Array.from({ length: totalSteps - 1 }).map((_, i) => {
-            const a = positionFor(i);
-            const b = positionFor(i + 1);
-            const ax = a.isRight ? "82%" : "26%";
-            const bx = b.isRight ? "82%" : "26%";
-            const ay = a.top + 18;
-            const by = b.top + 18;
-            const cx = "50%";
-            const cy = (ay + by) / 2;
-            const done = i + 1 < currentStep;
-            return (
-              <path
-                key={i}
-                d={`M${ax},${ay} Q${cx},${cy} ${bx},${by}`}
-                stroke={done ? "black" : "#9ca3af"}
-                strokeWidth="1.2"
-                fill="none"
-                strokeDasharray="3,3"
-                markerEnd={done ? "url(#arrow-done)" : "url(#arrow-todo)"}
-              />
-            );
-          })}
-        </svg>
-        {Array.from({ length: totalSteps }).map((_, i) => {
-          const { top, left } = positionFor(i);
-          const done = i < currentStep - 1;
-          const current = i === currentStep - 1;
-          return (
-            <div
-              key={i}
-              ref={current ? currentRef : undefined}
-              className={[
-                "absolute flex items-center justify-center rounded-full border text-xs font-medium transition-colors",
-                done
-                  ? "bg-black text-white border-black"
-                  : current
-                    ? "bg-white text-black border-black border-2 shadow-[0_2px_0_0_rgba(0,0,0,1)]"
-                    : "bg-white text-gray-400 border-gray-400",
-              ].join(" ")}
-              style={{ top, left, width: 56, height: 36 }}
-            >
-              {current ? `${currentStep}/${totalSteps}` : i + 1}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default HomePage;

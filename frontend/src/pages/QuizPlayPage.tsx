@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
-import { loadClasses } from "@/lib/classes";
+import { loadClasses, type ClassItem } from "@/lib/classes";
 import { saveAttempt } from "@/lib/attempts";
 import { useQuizSession } from "@/hooks/useQuizSession";
 import { ChoiceList } from "@/component/quiz/ChoiceList";
@@ -9,15 +10,23 @@ import type { MultipleChoiceQuestion } from "@/types/quiz";
 function QuizPlayPage() {
   const { classId } = useParams({ from: "/quiz/$classId" });
   const navigate = useNavigate();
-  const klass = loadClasses().find((c) => c.id === classId);
+  const [klass, setKlass] = useState<ClassItem | undefined>(undefined);
+  const [classLoaded, setClassLoaded] = useState(false);
 
-  const session = useQuizSession(classId, klass?.name ?? "", klass !== undefined);
+  useEffect(() => {
+    loadClasses()
+      .then((cs) => setKlass(cs.find((c) => c.id === classId)))
+      .catch(() => {})
+      .finally(() => setClassLoaded(true));
+  }, [classId]);
 
-  const finishAndNavigateToResult = () => {
+  const session = useQuizSession(classId, klass?.name ?? "", classLoaded && klass !== undefined);
+
+  const finishAndNavigateToResult = async () => {
     if (session.state.kind !== "ready") return;
     const quiz = session.state.quiz;
     const mc = quiz.questions as MultipleChoiceQuestion[];
-    const attempt = saveAttempt({
+    const attempt = await saveAttempt({
       classId,
       quizId: quiz.classId,
       lectureTitle: quiz.lectureTitle,
@@ -32,16 +41,16 @@ function QuizPlayPage() {
     });
   };
 
+  if (!classLoaded || session.state.kind === "loading") {
+    return <LoadingScreen onClose={() => navigate({ to: "/quiz" })} />;
+  }
   if (!klass) {
     return (
       <ErrorScreen
-        message="강의를 찾을 수 없습니다"
+        message="Class not found"
         onBack={() => navigate({ to: "/quiz" })}
       />
     );
-  }
-  if (session.state.kind === "loading") {
-    return <LoadingScreen onClose={() => navigate({ to: "/quiz" })} />;
   }
   if (session.state.kind === "error") {
     return (
@@ -157,18 +166,18 @@ function FeedbackBanner({
         {ok ? (
           <>
             <Check className="w-4 h-4 text-green-700" />
-            <span className="text-green-800">정답!</span>
+            <span className="text-green-800">Correct!</span>
           </>
         ) : (
           <>
             <X className="w-4 h-4 text-red-700" />
-            <span className="text-red-800">아쉬워요</span>
+            <span className="text-red-800">Not quite</span>
           </>
         )}
       </div>
       {!ok && (
         <p className="mt-1 text-gray-800">
-          정답: <span className="font-medium">{correctText}</span>
+          Answer: <span className="font-medium">{correctText}</span>
         </p>
       )}
       {explanation && (
@@ -190,9 +199,9 @@ function LoadingScreen({ onClose }: { onClose: () => void }) {
       </header>
       <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
         <div className="w-10 h-10 border-2 border-black border-t-transparent rounded-full animate-spin" />
-        <p className="text-base text-gray-700">문제 생성 중…</p>
+        <p className="text-base text-gray-700">Generating questions…</p>
         <p className="text-xs text-gray-500 text-center">
-          최대 1분 정도 걸릴 수 있어요
+          This may take up to a minute
         </p>
       </div>
     </div>
