@@ -1,5 +1,6 @@
 import { ApiError, quizzesApi, type QuizDTO } from "@/lib/api";
 import { latestDocumentIdForClass } from "@/lib/notes";
+import { readJSON, writeJSON } from "@/lib/storage";
 import type { Quiz } from "@/types/quiz";
 
 const QUIZ_CACHE_KEY = "voro.classQuiz.v1";
@@ -7,24 +8,19 @@ const QUIZ_CACHE_KEY = "voro.classQuiz.v1";
 type ClassQuizMap = Record<string, string>;
 
 function loadCacheMap(): ClassQuizMap {
-  try {
-    const raw = localStorage.getItem(QUIZ_CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  return readJSON<ClassQuizMap>(QUIZ_CACHE_KEY, {});
 }
 
 function setCachedQuizId(classId: string, quizId: string) {
   const map = loadCacheMap();
   map[classId] = quizId;
-  localStorage.setItem(QUIZ_CACHE_KEY, JSON.stringify(map));
+  writeJSON(QUIZ_CACHE_KEY, map);
 }
 
 export const clearCachedQuizForClass = (classId: string) => {
   const map = loadCacheMap();
   delete map[classId];
-  localStorage.setItem(QUIZ_CACHE_KEY, JSON.stringify(map));
+  writeJSON(QUIZ_CACHE_KEY, map);
 };
 
 const toFrontendQuiz = (

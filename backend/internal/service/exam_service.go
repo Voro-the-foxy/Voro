@@ -1,26 +1,23 @@
 package service
 
-import (
-	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
-)
+import "nomilk/backend/internal/domain"
 
 type ExamService struct {
-	Repo *repository.ExamRepository
+	Gateway ExamGateway
 }
 
 func (s *ExamService) List() []domain.Exam {
-	return s.Repo.List()
+	return s.Gateway.List()
 }
 
 func (s *ExamService) ReplaceAll(exams []domain.Exam) []domain.Exam {
-	return s.Repo.ReplaceAll(exams)
+	return s.Gateway.ReplaceAll(exams)
 }
 
 func (s *ExamService) GetMaster() bool {
-	return s.Repo.GetMaster()
+	return s.Gateway.GetMaster()
 }
 
 func (s *ExamService) SetMaster(enabled bool) {
-	s.Repo.SetMaster(enabled)
+	s.Gateway.SetMaster(enabled)
 }

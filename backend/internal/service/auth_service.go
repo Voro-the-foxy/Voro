@@ -1,43 +1,44 @@
 package service
 
 import (
-	"errors"
+	"net/http"
 	"strings"
 
+	apperrors "nomilk/backend/internal/shared/errors"
+
 	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
 )
 
-var ErrMissingCredentials = errors.New("email and password are required")
+var ErrMissingCredentials = &apperrors.AppError{Code: http.StatusBadRequest, Message: "이메일과 비밀번호를 입력해주세요"}
 
 type AuthService struct {
-	Repo *repository.AuthRepository
+	Gateway AuthGateway
 }
 
 func (s *AuthService) Login(email string, password string) (domain.Session, error) {
 	if strings.TrimSpace(email) == "" || strings.TrimSpace(password) == "" {
 		return domain.Session{}, ErrMissingCredentials
 	}
-	return s.Repo.Login(email, password)
+	return s.Gateway.Login(email, password)
 }
 
 func (s *AuthService) Me(token string) (domain.User, error) {
 	if strings.TrimSpace(token) == "" {
-		return domain.User{}, repository.ErrInvalidToken
+		return domain.User{}, apperrors.ErrUnauthorized
 	}
-	return s.Repo.UserByToken(token)
+	return s.Gateway.UserByToken(token)
 }
 
 func (s *AuthService) Logout(token string) {
 	if strings.TrimSpace(token) == "" {
 		return
 	}
-	s.Repo.Logout(token)
+	s.Gateway.Logout(token)
 }
 
 func (s *AuthService) DeleteAccount(token string) error {
 	if strings.TrimSpace(token) == "" {
-		return repository.ErrInvalidToken
+		return apperrors.ErrUnauthorized
 	}
-	return s.Repo.DeleteAccount(token)
+	return s.Gateway.DeleteAccount(token)
 }

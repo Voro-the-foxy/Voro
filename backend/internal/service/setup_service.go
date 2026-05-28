@@ -1,18 +1,15 @@
 package service
 
-import (
-	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
-)
+import "nomilk/backend/internal/domain"
 
 type SetupService struct {
-	Repo *repository.SetupRepository
+	Gateway SetupGateway
 }
 
 func (s *SetupService) Get() domain.SetupState {
-	return s.Repo.Get()
+	return s.Gateway.Get()
 }
 
 func (s *SetupService) MarkStep(step string) domain.SetupState {
-	return s.Repo.MarkStep(step)
+	return s.Gateway.MarkStep(step)
 }

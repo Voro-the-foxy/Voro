@@ -1,34 +1,30 @@
 package service
 
-import (
-	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
-)
+import "nomilk/backend/internal/domain"
 
 type NoteService struct {
-	Repo *repository.NoteRepository
+	Gateway NoteGateway
 }
 
 func (s *NoteService) ListByClass(classID string) []domain.Note {
-	return s.Repo.ListByClass(classID)
+	return s.Gateway.ListByClass(classID)
 }
 
 func (s *NoteService) Add(classID, filename string, size int64, documentID string) domain.Note {
-	n := domain.Note{
+	return s.Gateway.Add(domain.Note{
 		ID:         newID(),
 		ClassID:    classID,
 		Filename:   filename,
 		Size:       size,
 		AddedAt:    nowMillis(),
 		DocumentID: documentID,
-	}
-	return s.Repo.Add(n)
+	})
 }
 
 func (s *NoteService) Delete(id string) error {
-	return s.Repo.Delete(id)
+	return s.Gateway.Delete(id)
 }
 
 func (s *NoteService) DeleteByClass(classID string) {
-	s.Repo.DeleteByClass(classID)
+	s.Gateway.DeleteByClass(classID)
 }

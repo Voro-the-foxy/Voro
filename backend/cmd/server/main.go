@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"nomilk/backend/internal/gateway/ai"
+	"nomilk/backend/internal/gateway/postgres"
 	"nomilk/backend/internal/handler"
-	"nomilk/backend/internal/repository"
 	"nomilk/backend/internal/service"
 	"os"
 	"strings"
@@ -41,8 +42,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Auth
-	authRepo := repository.NewAuthRepository(db)
-	authSvc := &service.AuthService{Repo: authRepo}
+	authGw := postgres.NewAuthGateway(db)
+	authSvc := &service.AuthService{Gateway: authGw}
 	authHnd := &handler.AuthHandler{Service: authSvc}
 	mux.HandleFunc("POST /api/auth/login", authHnd.Login)
 	mux.HandleFunc("GET /api/auth/me", authHnd.Me)
@@ -50,8 +51,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("DELETE /api/auth/account", authHnd.DeleteAccount)
 
 	// Classes
-	classRepo := repository.NewClassRepository(db)
-	classSvc := &service.ClassService{Repo: classRepo}
+	classGw := postgres.NewClassGateway(db)
+	classSvc := &service.ClassService{Gateway: classGw}
 	classHnd := &handler.ClassHandler{Service: classSvc}
 	mux.HandleFunc("GET /api/classes", classHnd.List)
 	mux.HandleFunc("PUT /api/classes", classHnd.ReplaceAll)
@@ -59,8 +60,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("DELETE /api/classes/{id}", classHnd.Delete)
 
 	// Notes
-	noteRepo := repository.NewNoteRepository(db)
-	noteSvc := &service.NoteService{Repo: noteRepo}
+	noteGw := postgres.NewNoteGateway(db)
+	noteSvc := &service.NoteService{Gateway: noteGw}
 	noteHnd := &handler.NoteHandler{Service: noteSvc}
 	mux.HandleFunc("GET /api/notes", noteHnd.ListByClass)
 	mux.HandleFunc("POST /api/notes", noteHnd.Add)
@@ -68,8 +69,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("DELETE /api/notes", noteHnd.DeleteByClass)
 
 	// Alarms
-	alarmRepo := repository.NewAlarmRepository(db)
-	alarmSvc := &service.AlarmService{Repo: alarmRepo}
+	alarmGw := postgres.NewAlarmGateway(db)
+	alarmSvc := &service.AlarmService{Gateway: alarmGw}
 	alarmHnd := &handler.AlarmHandler{Service: alarmSvc}
 	mux.HandleFunc("GET /api/alarms", alarmHnd.List)
 	mux.HandleFunc("PUT /api/alarms", alarmHnd.ReplaceAll)
@@ -77,8 +78,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("PUT /api/alarms/master", alarmHnd.SetMaster)
 
 	// Exams
-	examRepo := repository.NewExamRepository(db)
-	examSvc := &service.ExamService{Repo: examRepo}
+	examGw := postgres.NewExamGateway(db)
+	examSvc := &service.ExamService{Gateway: examGw}
 	examHnd := &handler.ExamHandler{Service: examSvc}
 	mux.HandleFunc("GET /api/exams", examHnd.List)
 	mux.HandleFunc("PUT /api/exams", examHnd.ReplaceAll)
@@ -86,15 +87,15 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("PUT /api/exams/master", examHnd.SetMaster)
 
 	// Setup
-	setupRepo := repository.NewSetupRepository(db)
-	setupSvc := &service.SetupService{Repo: setupRepo}
+	setupGw := postgres.NewSetupGateway(db)
+	setupSvc := &service.SetupService{Gateway: setupGw}
 	setupHnd := &handler.SetupHandler{Service: setupSvc}
 	mux.HandleFunc("GET /api/setup", setupHnd.Get)
 	mux.HandleFunc("POST /api/setup/steps", setupHnd.MarkStep)
 
 	// Attempts
-	attemptRepo := repository.NewAttemptRepository(db)
-	attemptSvc := &service.AttemptService{Repo: attemptRepo}
+	attemptGw := postgres.NewAttemptGateway(db)
+	attemptSvc := &service.AttemptService{Gateway: attemptGw}
 	attemptHnd := &handler.AttemptHandler{Service: attemptSvc}
 	mux.HandleFunc("GET /api/attempts", attemptHnd.List)
 	mux.HandleFunc("GET /api/attempts/{id}", attemptHnd.GetByID)
@@ -102,8 +103,8 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("DELETE /api/attempts", attemptHnd.DeleteByClass)
 
 	// Quiz (AI proxy)
-	aiRepo := repository.NewAIRepository()
-	quizSvc := &service.QuizService{Repo: aiRepo}
+	aiGw := ai.NewQuizGateway()
+	quizSvc := &service.QuizService{Gateway: aiGw}
 	quizHnd := &handler.QuizHandler{Service: quizSvc}
 	mux.HandleFunc("POST /api/documents", quizHnd.UploadDocument)
 	mux.HandleFunc("GET /api/documents", quizHnd.ListDocuments)
@@ -120,13 +121,13 @@ func main() {
 		dsn = "postgres://voro:voro@localhost:5433/voro?sslmode=disable"
 	}
 
-	db, err := repository.Open(dsn)
+	db, err := postgres.Open(dsn)
 	if err != nil {
 		log.Fatalf("DB 연결 실패: %v", err)
 	}
 	defer db.Close()
 
-	if err := repository.ApplyMigrations(db); err != nil {
+	if err := postgres.ApplyMigrations(db); err != nil {
 		log.Fatalf("마이그레이션 실패: %v", err)
 	}
 

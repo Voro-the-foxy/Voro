@@ -1,4 +1,4 @@
-package repository
+package postgres
 
 import (
 	"database/sql"
@@ -120,13 +120,11 @@ func ApplyMigrations(db *sql.DB) error {
 	return err
 }
 
-// jsonMarshal is a helper to marshal a value to JSON bytes for JSONB columns.
 func jsonMarshal(v any) []byte {
 	b, _ := json.Marshal(v)
 	return b
 }
 
-// jsonScan scans a JSONB column (returned as []byte) into a Go value.
 func jsonScan(b []byte, dst any) {
 	if b == nil {
 		return

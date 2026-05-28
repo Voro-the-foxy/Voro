@@ -2,13 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 
 	"nomilk/backend/internal/domain"
 	"nomilk/backend/internal/handler/dto"
-	"nomilk/backend/internal/repository"
 	"nomilk/backend/internal/service"
 )
 
@@ -25,17 +23,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	session, err := h.Service.Login(req.Email, req.Password)
 	if err != nil {
-		status := http.StatusInternalServerError
-		message := "로그인에 실패했습니다"
-		if errors.Is(err, service.ErrMissingCredentials) {
-			status = http.StatusBadRequest
-			message = "이메일과 비밀번호를 입력해주세요"
-		}
-		if errors.Is(err, repository.ErrInvalidCredentials) {
-			status = http.StatusUnauthorized
-			message = "이메일 또는 비밀번호가 올바르지 않습니다"
-		}
-		http.Error(w, message, status)
+		writeError(w, err)
 		return
 	}
 

@@ -1,26 +1,23 @@
 package service
 
-import (
-	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
-)
+import "nomilk/backend/internal/domain"
 
 type AlarmService struct {
-	Repo *repository.AlarmRepository
+	Gateway AlarmGateway
 }
 
 func (s *AlarmService) List() []domain.Alarm {
-	return s.Repo.List()
+	return s.Gateway.List()
 }
 
 func (s *AlarmService) ReplaceAll(alarms []domain.Alarm) []domain.Alarm {
-	return s.Repo.ReplaceAll(alarms)
+	return s.Gateway.ReplaceAll(alarms)
 }
 
 func (s *AlarmService) GetMaster() bool {
-	return s.Repo.GetMaster()
+	return s.Gateway.GetMaster()
 }
 
 func (s *AlarmService) SetMaster(enabled bool) {
-	s.Repo.SetMaster(enabled)
+	s.Gateway.SetMaster(enabled)
 }

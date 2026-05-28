@@ -1,27 +1,23 @@
 package service
 
-import (
-	"nomilk/backend/internal/domain"
-	"nomilk/backend/internal/repository"
-)
+import "nomilk/backend/internal/domain"
 
 type ClassService struct {
-	Repo *repository.ClassRepository
+	Gateway ClassGateway
 }
 
 func (s *ClassService) List() []domain.ClassItem {
-	return s.Repo.List()
+	return s.Gateway.List()
 }
 
 func (s *ClassService) ReplaceAll(classes []domain.ClassItem) []domain.ClassItem {
-	return s.Repo.ReplaceAll(classes)
+	return s.Gateway.ReplaceAll(classes)
 }
 
 func (s *ClassService) Add(name string) domain.ClassItem {
-	id := newID()
-	return s.Repo.Add(domain.ClassItem{ID: id, Name: name, Slots: []string{}})
+	return s.Gateway.Add(domain.ClassItem{ID: newID(), Name: name, Slots: []string{}})
 }
 
 func (s *ClassService) Delete(id string) error {
-	return s.Repo.Delete(id)
+	return s.Gateway.Delete(id)
 }
