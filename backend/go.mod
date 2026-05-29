@@ -1,4 +1,4 @@
-module nomilk/backend
+module voro/backend
 
 go 1.25.0
 

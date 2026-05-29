@@ -1,0 +1,99 @@
+package attempt
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"voro/backend/internal/domain"
+	attemptsvc "voro/backend/internal/service/attempt"
+	apperrors "voro/backend/internal/shared/errors"
+	"voro/backend/internal/shared/httputil"
+)
+
+type Handler struct {
+	Service *attemptsvc.Service
+}
+
+func toDTO(a domain.Attempt) DTO {
+	questionIDs := a.QuestionIDs
+	if questionIDs == nil {
+		questionIDs = []string{}
+	}
+	answers := a.Answers
+	if answers == nil {
+		answers = []int{}
+	}
+	correctIndices := a.CorrectIndices
+	if correctIndices == nil {
+		correctIndices = []int{}
+	}
+	return DTO{
+		ID: a.ID, ClassID: a.ClassID, QuizID: a.QuizID, LectureTitle: a.LectureTitle,
+		QuestionIDs: questionIDs, Answers: answers, CorrectIndices: correctIndices,
+		Score: a.Score, Total: a.Total, CompletedAt: a.CompletedAt,
+	}
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	classID := r.URL.Query().Get("classId")
+	attempts, err := h.Service.List(classID)
+	if err != nil {
+		httputil.WriteError(w, err)
+		return
+	}
+	out := make([]DTO, len(attempts))
+	for i, a := range attempts {
+		out[i] = toDTO(a)
+	}
+	httputil.WriteJSON(w, http.StatusOK, out)
+}
+
+func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		httputil.WriteError(w, apperrors.ErrInvalidRequest)
+		return
+	}
+	a, err := h.Service.GetByID(id)
+	if err != nil {
+		httputil.WriteError(w, err)
+		return
+	}
+	httputil.WriteJSON(w, http.StatusOK, toDTO(a))
+}
+
+func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
+	var req CreateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ClassID == "" {
+		httputil.WriteError(w, apperrors.ErrInvalidRequest)
+		return
+	}
+	a, err := h.Service.Save(domain.Attempt{
+		ClassID:        req.ClassID,
+		QuizID:         req.QuizID,
+		LectureTitle:   req.LectureTitle,
+		QuestionIDs:    req.QuestionIDs,
+		Answers:        req.Answers,
+		CorrectIndices: req.CorrectIndices,
+		Score:          req.Score,
+		Total:          req.Total,
+	})
+	if err != nil {
+		httputil.WriteError(w, err)
+		return
+	}
+	httputil.WriteJSON(w, http.StatusCreated, toDTO(a))
+}
+
+func (h *Handler) DeleteByClass(w http.ResponseWriter, r *http.Request) {
+	classID := r.URL.Query().Get("classId")
+	if classID == "" {
+		httputil.WriteError(w, apperrors.ErrInvalidRequest)
+		return
+	}
+	if err := h.Service.DeleteByClass(classID); err != nil {
+		httputil.WriteError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}

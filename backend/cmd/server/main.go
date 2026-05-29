@@ -4,20 +4,35 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"nomilk/backend/internal/gateway/ai"
-	"nomilk/backend/internal/gateway/postgres"
-	"nomilk/backend/internal/handler"
-	"nomilk/backend/internal/service"
 	"os"
 	"strings"
+
+	"voro/backend/internal/gateway/ai"
+	"voro/backend/internal/gateway/postgres"
+
+	alarmhnd   "voro/backend/internal/handler/alarm"
+	attempthnd "voro/backend/internal/handler/attempt"
+	authhnd    "voro/backend/internal/handler/auth"
+	classhnd   "voro/backend/internal/handler/class"
+	examhnd    "voro/backend/internal/handler/exam"
+	notehnd    "voro/backend/internal/handler/note"
+	quizhnd    "voro/backend/internal/handler/quiz"
+	setuphnd   "voro/backend/internal/handler/setup"
+
+	"voro/backend/internal/service/alarm"
+	"voro/backend/internal/service/attempt"
+	"voro/backend/internal/service/auth"
+	"voro/backend/internal/service/class"
+	"voro/backend/internal/service/exam"
+	"voro/backend/internal/service/note"
+	"voro/backend/internal/service/quiz"
+	"voro/backend/internal/service/setup"
 )
 
 func isAllowedOrigin(origin string) bool {
-	// localhost / 127.0.0.1 (any port) — safe for local dev
 	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
 		return true
 	}
-	// Capacitor
 	return origin == "capacitor://localhost" || origin == "http://localhost"
 }
 
@@ -42,70 +57,54 @@ func setupRouter(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Auth
-	authGw := postgres.NewAuthGateway(db)
-	authSvc := &service.AuthService{Gateway: authGw}
-	authHnd := &handler.AuthHandler{Service: authSvc}
+	authHnd := &authhnd.Handler{Service: &auth.Service{Gateway: postgres.NewAuthGateway(db)}}
 	mux.HandleFunc("POST /api/auth/login", authHnd.Login)
 	mux.HandleFunc("GET /api/auth/me", authHnd.Me)
 	mux.HandleFunc("POST /api/auth/logout", authHnd.Logout)
 	mux.HandleFunc("DELETE /api/auth/account", authHnd.DeleteAccount)
 
 	// Classes
-	classGw := postgres.NewClassGateway(db)
-	classSvc := &service.ClassService{Gateway: classGw}
-	classHnd := &handler.ClassHandler{Service: classSvc}
+	classHnd := &classhnd.Handler{Service: &class.Service{Gateway: postgres.NewClassGateway(db)}}
 	mux.HandleFunc("GET /api/classes", classHnd.List)
 	mux.HandleFunc("PUT /api/classes", classHnd.ReplaceAll)
 	mux.HandleFunc("POST /api/classes", classHnd.Add)
 	mux.HandleFunc("DELETE /api/classes/{id}", classHnd.Delete)
 
 	// Notes
-	noteGw := postgres.NewNoteGateway(db)
-	noteSvc := &service.NoteService{Gateway: noteGw}
-	noteHnd := &handler.NoteHandler{Service: noteSvc}
+	noteHnd := &notehnd.Handler{Service: &note.Service{Gateway: postgres.NewNoteGateway(db)}}
 	mux.HandleFunc("GET /api/notes", noteHnd.ListByClass)
 	mux.HandleFunc("POST /api/notes", noteHnd.Add)
 	mux.HandleFunc("DELETE /api/notes/{id}", noteHnd.Delete)
 	mux.HandleFunc("DELETE /api/notes", noteHnd.DeleteByClass)
 
 	// Alarms
-	alarmGw := postgres.NewAlarmGateway(db)
-	alarmSvc := &service.AlarmService{Gateway: alarmGw}
-	alarmHnd := &handler.AlarmHandler{Service: alarmSvc}
+	alarmHnd := &alarmhnd.Handler{Service: &alarm.Service{Gateway: postgres.NewAlarmGateway(db)}}
 	mux.HandleFunc("GET /api/alarms", alarmHnd.List)
 	mux.HandleFunc("PUT /api/alarms", alarmHnd.ReplaceAll)
 	mux.HandleFunc("GET /api/alarms/master", alarmHnd.GetMaster)
 	mux.HandleFunc("PUT /api/alarms/master", alarmHnd.SetMaster)
 
 	// Exams
-	examGw := postgres.NewExamGateway(db)
-	examSvc := &service.ExamService{Gateway: examGw}
-	examHnd := &handler.ExamHandler{Service: examSvc}
+	examHnd := &examhnd.Handler{Service: &exam.Service{Gateway: postgres.NewExamGateway(db)}}
 	mux.HandleFunc("GET /api/exams", examHnd.List)
 	mux.HandleFunc("PUT /api/exams", examHnd.ReplaceAll)
 	mux.HandleFunc("GET /api/exams/master", examHnd.GetMaster)
 	mux.HandleFunc("PUT /api/exams/master", examHnd.SetMaster)
 
 	// Setup
-	setupGw := postgres.NewSetupGateway(db)
-	setupSvc := &service.SetupService{Gateway: setupGw}
-	setupHnd := &handler.SetupHandler{Service: setupSvc}
+	setupHnd := &setuphnd.Handler{Service: &setup.Service{Gateway: postgres.NewSetupGateway(db)}}
 	mux.HandleFunc("GET /api/setup", setupHnd.Get)
 	mux.HandleFunc("POST /api/setup/steps", setupHnd.MarkStep)
 
 	// Attempts
-	attemptGw := postgres.NewAttemptGateway(db)
-	attemptSvc := &service.AttemptService{Gateway: attemptGw}
-	attemptHnd := &handler.AttemptHandler{Service: attemptSvc}
+	attemptHnd := &attempthnd.Handler{Service: &attempt.Service{Gateway: postgres.NewAttemptGateway(db)}}
 	mux.HandleFunc("GET /api/attempts", attemptHnd.List)
 	mux.HandleFunc("GET /api/attempts/{id}", attemptHnd.GetByID)
 	mux.HandleFunc("POST /api/attempts", attemptHnd.Save)
 	mux.HandleFunc("DELETE /api/attempts", attemptHnd.DeleteByClass)
 
 	// Quiz (AI proxy)
-	aiGw := ai.NewQuizGateway()
-	quizSvc := &service.QuizService{Gateway: aiGw}
-	quizHnd := &handler.QuizHandler{Service: quizSvc}
+	quizHnd := &quizhnd.Handler{Service: &quiz.Service{Gateway: ai.NewQuizGateway()}}
 	mux.HandleFunc("POST /api/documents", quizHnd.UploadDocument)
 	mux.HandleFunc("GET /api/documents", quizHnd.ListDocuments)
 	mux.HandleFunc("DELETE /api/documents/{id}", quizHnd.DeleteDocument)
