@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Home, BookOpenCheck, UserRound } from "lucide-react";
 
-type Tab = "home" | "quiz" | "profile";
+type Tab = "home" | "quiz" | "profile" | "setting";
 
 export function BottomNav({ active }: { active: Tab }) {
   return (

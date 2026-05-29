@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { loadSetup, checkSetupReadiness, type SetupStep } from "@/lib/setup";
+import { checkSetupReadiness, type SetupStep } from "@/lib/setup";
 
 const STEPS: { label: string; to: string; key: SetupStep }[] = [
   { label: "Step1 : set-up your class schedule", to: "/set-up/schedule", key: "schedule" },
