@@ -37,7 +37,15 @@ func isAllowedOrigin(origin string) bool {
 		return true
 	}
 	allowed := os.Getenv("ALLOWED_ORIGIN")
-	return allowed != "" && origin == allowed
+	if allowed == "" {
+		return false
+	}
+	for _, o := range strings.Split(allowed, ",") {
+		if strings.TrimSpace(o) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 func cors(next http.Handler) http.Handler {
