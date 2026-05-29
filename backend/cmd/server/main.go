@@ -33,7 +33,11 @@ func isAllowedOrigin(origin string) bool {
 	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
 		return true
 	}
-	return origin == "capacitor://localhost" || origin == "http://localhost"
+	if origin == "capacitor://localhost" {
+		return true
+	}
+	allowed := os.Getenv("ALLOWED_ORIGIN")
+	return allowed != "" && origin == allowed
 }
 
 func cors(next http.Handler) http.Handler {
@@ -55,6 +59,10 @@ func cors(next http.Handler) http.Handler {
 
 func setupRouter(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	// Auth
 	authHnd := &authhnd.Handler{Service: &auth.Service{Gateway: postgres.NewAuthGateway(db)}}
@@ -130,8 +138,12 @@ func main() {
 		log.Fatalf("마이그레이션 실패: %v", err)
 	}
 
-	log.Println("서버 시작: 8080")
-	if err := http.ListenAndServe(":8080", cors(setupRouter(db))); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("server starting on :%s", port)
+	if err := http.ListenAndServe(":"+port, cors(setupRouter(db))); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }
