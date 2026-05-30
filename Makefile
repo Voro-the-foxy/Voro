@@ -1,6 +1,7 @@
 .PHONY: backend-run backend-build frontend-dev frontend-build frontend-install \
         db-up db-down db-logs db-psql db-reset \
         ai-install ai-dev ai-migrate ai-revision ai-lint \
+        frontend-lint lint \
         dev dev-stop
 
 .ONESHELL:
@@ -54,6 +55,12 @@ ai-revision:
 
 ai-lint:
 	cd ai-server && uv run ruff check .
+
+frontend-lint: frontend-install
+	cd frontend && npm run lint
+
+lint: ai-lint frontend-lint
+	cd backend && go build ./...
 
 # --- One-shot full stack ---
 
