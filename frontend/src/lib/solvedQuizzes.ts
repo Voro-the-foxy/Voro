@@ -13,6 +13,6 @@ export const loadSolvedQuizzesByClass = async (classId: string): Promise<SolvedQ
   return attempts.map((a) => ({ id: a.id, classId: a.classId, completedAt: a.completedAt }));
 };
 
-export const deleteSolvedQuizzesByClass = async (_classId: string): Promise<void> => {
+export const deleteSolvedQuizzesByClass = async (/* classId unused */): Promise<void> => {
   // Covered by deleteAttemptsByClass — no separate action needed.
 };

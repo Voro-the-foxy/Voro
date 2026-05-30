@@ -36,7 +36,7 @@ function QuizSelectPage() {
           }),
         );
         setRows(rowData);
-      } catch {}
+      } catch { /* ignore fetch errors on mount */ }
     })();
   }, []);
 

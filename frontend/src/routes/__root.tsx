@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { SideNav } from "@/component/SideNav";
 import { ensureValidSession } from "@/lib/auth";
 
+/* eslint-disable react-refresh/only-export-components */
 export const Route = createRootRoute({
   beforeLoad: () => ensureValidSession(),
   component: RootLayout,

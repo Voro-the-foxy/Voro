@@ -20,7 +20,7 @@ function HomePage() {
         ]);
         setDevouredNotes(notes.length);
         setSolvedQuizzes(solved.length);
-      } catch {}
+      } catch { /* ignore fetch errors on mount */ }
     })();
   }, []);
 

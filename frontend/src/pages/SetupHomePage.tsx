@@ -30,6 +30,7 @@ function SetupHomePage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void reload();
     window.addEventListener("focus", reload);
     return () => window.removeEventListener("focus", reload);
