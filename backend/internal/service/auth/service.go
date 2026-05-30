@@ -8,7 +8,7 @@ import (
 	apperrors "voro/backend/internal/shared/errors"
 )
 
-var ErrMissingCredentials = &apperrors.AppError{Code: http.StatusBadRequest, Message: "이메일과 비밀번호를 입력해주세요"}
+var ErrMissingCredentials = &apperrors.AppError{Code: http.StatusBadRequest, Message: "email and password are required"}
 
 type Service struct {
 	Gateway Gateway

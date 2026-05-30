@@ -189,9 +189,9 @@ func mapStatus(resp *http.Response) error {
 	case resp.StatusCode == http.StatusNotFound:
 		return apperrors.ErrNotFound
 	case resp.StatusCode == http.StatusBadRequest:
-		return &apperrors.AppError{Code: http.StatusBadRequest, Message: fmt.Sprintf("AI 서버 요청 오류: %s", msg)}
+		return &apperrors.AppError{Code: http.StatusBadRequest, Message: fmt.Sprintf("AI server request error: %s", msg)}
 	case resp.StatusCode >= 500:
-		return &apperrors.AppError{Code: http.StatusBadGateway, Message: fmt.Sprintf("AI 서버 오류: %s", msg)}
+		return &apperrors.AppError{Code: http.StatusBadGateway, Message: fmt.Sprintf("AI server error: %s", msg)}
 	default:
 		return apperrors.ErrInternalServer
 	}

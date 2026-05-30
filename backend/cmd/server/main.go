@@ -17,12 +17,12 @@ func main() {
 
 	db, err := postgres.Open(dsn)
 	if err != nil {
-		log.Fatalf("DB 연결 실패: %v", err)
+		log.Fatalf("failed to connect to database: %v", err)
 	}
 	defer db.Close()
 
 	if err := postgres.ApplyMigrations(db); err != nil {
-		log.Fatalf("마이그레이션 실패: %v", err)
+		log.Fatalf("failed to apply migrations: %v", err)
 	}
 
 	port := os.Getenv("PORT")

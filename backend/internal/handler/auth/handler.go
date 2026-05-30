@@ -17,7 +17,7 @@ type Handler struct {
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "잘못된 요청입니다", http.StatusBadRequest)
+		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	session, err := h.Service.Login(req.Email, req.Password)
@@ -34,7 +34,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Me(w http.ResponseWriter, r *http.Request) {
 	user, err := h.Service.Me(bearerToken(r))
 	if err != nil {
-		http.Error(w, "권한이 없습니다", http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	httputil.WriteJSON(w, http.StatusOK, toUserDTO(user))
@@ -47,7 +47,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	if err := h.Service.DeleteAccount(bearerToken(r)); err != nil {
-		http.Error(w, "권한이 없습니다", http.StatusUnauthorized)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
