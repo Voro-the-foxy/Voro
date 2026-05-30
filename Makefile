@@ -74,13 +74,13 @@ test-unit:
 	cd ai-server && uv run pytest tests/ -v
 
 test-e2e:
-	@echo "==> Starting test DB"
-	cd infra && docker compose up -d --wait
+	@echo "==> Starting test DB (port 5434, isolated from dev DB)"
+	cd infra && docker compose -f docker-compose.test.yml up -d --wait
 	@echo "==> Backend E2E tests"
-	cd backend && TEST_DATABASE_URL=postgres://voro:voro@localhost:5433/voro?sslmode=disable \
+	cd backend && TEST_DATABASE_URL=postgres://voro:voro@localhost:5434/voro_test?sslmode=disable \
 	  go test -tags e2e -v ./internal/e2e/...
 	@echo "==> Stopping test DB"
-	cd infra && docker compose down
+	cd infra && docker compose -f docker-compose.test.yml down
 
 # --- One-shot full stack ---
 

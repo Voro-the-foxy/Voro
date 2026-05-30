@@ -1,0 +1,17 @@
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: voro-postgres-test
+    environment:
+      POSTGRES_USER: voro
+      POSTGRES_PASSWORD: voro
+      POSTGRES_DB: voro_test
+    ports:
+      - "5434:5432"
+    tmpfs:
+      - /var/lib/postgresql/data  # in-memory: fast and auto-wiped between runs
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voro -d voro_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
