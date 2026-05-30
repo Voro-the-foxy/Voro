@@ -2,6 +2,7 @@
         db-up db-down db-logs db-psql db-reset \
         ai-install ai-dev ai-migrate ai-revision ai-lint \
         frontend-lint lint \
+        test test-unit test-e2e \
         dev dev-stop
 
 .ONESHELL:
@@ -61,6 +62,25 @@ frontend-lint: frontend-install
 
 lint: ai-lint frontend-lint
 	cd backend && go build ./...
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+
+test: test-unit test-e2e
+
+test-unit:
+	@echo "==> Backend unit tests"
+	cd backend && go test ./internal/...
+	@echo "==> AI server unit tests"
+	cd ai-server && uv run pytest tests/ -v
+
+test-e2e:
+	@echo "==> Starting test DB"
+	cd infra && docker compose up -d --wait
+	@echo "==> Backend E2E tests"
+	cd backend && TEST_DATABASE_URL=postgres://voro:voro@localhost:5433/voro?sslmode=disable \
+	  go test -tags e2e -v ./internal/e2e/...
+	@echo "==> Stopping test DB"
+	cd infra && docker compose down
 
 # --- One-shot full stack ---
 
