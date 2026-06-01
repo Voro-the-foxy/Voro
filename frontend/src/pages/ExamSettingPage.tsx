@@ -54,10 +54,10 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
         onChange();
       }}
       className={`flex items-center w-10 h-5 p-[2px] rounded-full border border-black transition-colors ${
-        checked ? 'bg-black justify-end' : 'bg-white justify-start'
+        checked ? 'bg-black justify-end' : 'bg-paper justify-start'
       }`}
     >
-      <span className={`w-3.5 h-3.5 rounded-full ${checked ? 'bg-white' : 'bg-black'}`} />
+      <span className={`w-3.5 h-3.5 rounded-full ${checked ? 'bg-paper' : 'bg-black'}`} />
     </button>
   );
 }
@@ -171,7 +171,7 @@ function ExamRow({
   onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 border border-black rounded-xl mx-3 mb-2">
+    <div className="flex items-center gap-2 px-3 py-2 border-2 border-black rounded-sm mx-3 mb-2 sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] bg-paper">
       <IconButton size="sm" onClick={onDelete} aria-label="Delete exam">
         ✕
       </IconButton>
@@ -295,7 +295,7 @@ export default function ExamSettingPage() {
   const isModal = classSelectOpen || pickerOpen;
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <div className="flex items-center justify-between px-4 py-3 border-b border-black shrink-0">
         <h1 className="text-lg font-bold">
           {classSelectOpen ? 'Select Class' : pickerOpen ? 'Set Date & Time' : 'Exam'}
@@ -318,18 +318,18 @@ export default function ExamSettingPage() {
                   key={c}
                   type="button"
                   onClick={() => selectClass(c)}
-                  className="border border-black rounded-full py-3 text-sm hover:bg-black hover:text-white transition-colors"
+                  className="border-2 border-black rounded-sm py-3 text-sm hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] bg-paper"
                 >
                   {c}
                 </button>
               ))
             )}
           </div>
-          <div className="p-4 border-t border-gray-200 shrink-0">
+          <div className="p-4 border-t border-black shrink-0">
             <button
               type="button"
               onClick={() => setClassSelectOpen(false)}
-              className="w-full py-3 border border-black rounded-xl text-sm"
+              className="w-full py-3 border-2 border-black rounded-sm text-sm bg-paper hover:bg-paper-dark sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)]"
             >
               Cancel
             </button>
@@ -347,7 +347,7 @@ export default function ExamSettingPage() {
             <Wheel items={MINUTES} value={minute} onChange={setMinute} format={pad} />
           </div>
 
-          <div className="border border-black rounded-xl p-3">
+          <div className="border-2 border-black rounded-sm p-3 sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
             <Calendar
               year={year}
               month={month}
@@ -361,14 +361,14 @@ export default function ExamSettingPage() {
             <button
               type="button"
               onClick={closePicker}
-              className="flex-1 py-3 border border-black rounded-xl text-sm bg-white text-black"
+              className="flex-1 py-3 border-2 border-black rounded-sm text-sm bg-paper text-black hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={savePicker}
-              className="flex-1 py-3 border border-black rounded-xl text-sm bg-black text-white"
+              className="flex-1 py-3 border-2 border-black rounded-sm text-sm bg-black text-white sketch shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]"
             >
               Save
             </button>
@@ -376,7 +376,7 @@ export default function ExamSettingPage() {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-3 px-4 py-2 border border-black rounded-xl mx-3 mt-3 mb-2 shrink-0">
+          <div className="flex items-center gap-3 px-4 py-2 border-2 border-black rounded-sm mx-3 mt-3 mb-2 shrink-0 sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] bg-paper">
             <Toggle checked={masterEnabled} onChange={() => setMasterEnabled((v) => !v)} />
             <span className="text-sm">Enable exam notifications</span>
           </div>
@@ -397,10 +397,10 @@ export default function ExamSettingPage() {
             )}
           </div>
 
-          <div className="p-3 border-t border-gray-300 shrink-0">
+          <div className="p-3 border-t border-black shrink-0">
             <button
               onClick={handleSave}
-              className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
+              className="w-full py-2 rounded-sm border-2 border-black bg-black text-white text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)]"
             >
               Save
             </button>

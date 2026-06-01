@@ -32,7 +32,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white text-black px-6 py-7">
+    <div className="flex flex-col h-full bg-paper text-black px-6 py-7">
       <div className="flex items-end justify-center gap-3 h-[150px]">
         <DotLottieReact
           src="/voro_2.lottie"
@@ -41,7 +41,7 @@ function LoginPage() {
           aria-label="voro"
           style={{ width: 118, height: 126 }}
         />
-        <div className="mb-7 px-5 py-3 border border-black rounded-2xl">
+        <div className="mb-7 px-5 py-3 border-2 border-black rounded-2xl sketch bg-paper shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
           <span className="text-sm italic">Welcome back!</span>
         </div>
       </div>
@@ -53,7 +53,7 @@ function LoginPage() {
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="h-12 rounded-xl border border-black px-4 outline-none focus:shadow-[3px_3px_0_0_rgba(0,0,0,1)]"
+            className="h-12 rounded-sm border-2 border-black px-4 outline-none bg-paper focus:shadow-[3px_3px_0_0_rgba(0,0,0,1)] sketch"
             autoComplete="email"
             required
           />
@@ -65,7 +65,7 @@ function LoginPage() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="h-12 rounded-xl border border-black px-4 outline-none focus:shadow-[3px_3px_0_0_rgba(0,0,0,1)]"
+            className="h-12 rounded-sm border-2 border-black px-4 outline-none bg-paper focus:shadow-[3px_3px_0_0_rgba(0,0,0,1)] sketch"
             autoComplete="current-password"
             required
           />
@@ -78,7 +78,7 @@ function LoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-2 flex h-12 items-center justify-center gap-2 rounded-xl border border-black bg-black text-sm text-white disabled:opacity-50"
+          className="mt-2 flex h-12 items-center justify-center gap-2 rounded-sm border-2 border-black bg-black text-sm text-white disabled:opacity-50 sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_0_rgba(0,0,0,0.3)]"
         >
           <LogIn className="w-4 h-4" />
           <span>{submitting ? "Logging in..." : "Login"}</span>

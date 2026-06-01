@@ -88,7 +88,7 @@ function QuizPlayPage() {
   const buttonDisabled = !session.checked && session.selected === null;
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="px-5 pt-5 pb-3">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-base font-medium">{quiz.lectureTitle}</h1>
@@ -138,7 +138,7 @@ function QuizPlayPage() {
         <button
           disabled={buttonDisabled}
           onClick={onPrimary}
-          className="w-full py-3 rounded-xl border border-black bg-black text-white text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200"
+          className="w-full py-3 rounded-sm border-2 border-black bg-black text-white text-sm font-medium sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200 disabled:shadow-none"
         >
           {buttonLabel}
         </button>
@@ -158,7 +158,7 @@ function FeedbackBanner({
 }) {
   return (
     <div
-      className={`mt-4 px-4 py-3 border rounded-2xl text-sm ${
+      className={`mt-4 px-4 py-3 border-2 rounded-sm text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.15)] ${
         ok ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"
       }`}
     >
@@ -191,7 +191,7 @@ function FeedbackBanner({
 
 function LoadingScreen({ onClose }: { onClose: () => void }) {
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="flex items-center justify-end px-5 pt-5 pb-3">
         <button onClick={onClose} aria-label="Close" className="p-1 -mr-1">
           <X className="w-5 h-5" />
@@ -216,7 +216,7 @@ function ErrorScreen({
   onBack: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="flex items-center justify-end px-5 pt-5 pb-3">
         <button onClick={onBack} aria-label="Close" className="p-1 -mr-1">
           <X className="w-5 h-5" />
@@ -237,7 +237,7 @@ function ErrorScreen({
 
 function Prompt({ text }: { text: string }) {
   return (
-    <div className="px-5 py-4 border border-black rounded-2xl">
+    <div className="px-5 py-4 border-2 border-black rounded-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper">
       <p className="text-sm">{text}</p>
     </div>
   );

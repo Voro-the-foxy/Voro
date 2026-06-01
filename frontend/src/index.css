@@ -1,13 +1,46 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
-  --font-serif: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
-  --font-mono: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive;
+  --font-sans: 'Comic Neue', 'Comic Sans MS', cursive;
+  --font-serif: 'Comic Neue', 'Comic Sans MS', cursive;
+  --font-mono: 'Comic Neue', 'Comic Sans MS', cursive;
+  --color-paper: #fdfcf7;
+  --color-paper-dark: #f0ede0;
 }
 
-html,
-body,
-* {
-  font-family: 'Comic Neue', 'Comic Sans MS', 'Comic Sans', cursive !important;
+@layer base {
+  html,
+  body,
+  * {
+    font-family: 'Comic Neue', 'Comic Sans MS', cursive !important;
+    font-weight: bold !important;
+  }
+}
+
+@layer utilities {
+  .bg-paper {
+    background-color: #fdfcf7;
+  }
+
+  .bg-paper-dark {
+    background-color: #f0ede0;
+  }
+
+  /* SVG sketch filter — distorts element edges to look hand-drawn */
+  .sketch {
+    filter: url(#sketch);
+  }
+
+  .sketch-strong {
+    filter: url(#sketch-strong);
+  }
+
+  /* Offset hard shadow typical of sketch/neo-brutalist style */
+  .sketch-shadow {
+    box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 1);
+  }
+
+  .sketch-shadow-sm {
+    box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 1);
+  }
 }

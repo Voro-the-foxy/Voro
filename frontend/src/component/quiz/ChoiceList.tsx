@@ -11,10 +11,10 @@ type Props = {
 type Visual = "neutral" | "selected" | "correct" | "wrong";
 
 const styleFor: Record<Visual, string> = {
-  neutral: "border-gray-300 bg-white",
-  selected: "border-black bg-gray-50",
-  correct: "border-green-600 bg-green-50",
-  wrong: "border-red-600 bg-red-50",
+  neutral: "border-2 border-black bg-paper shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] hover:bg-paper-dark",
+  selected: "border-2 border-black bg-paper-dark shadow-[2px_2px_0_0_rgba(0,0,0,1)]",
+  correct: "border-2 border-green-600 bg-green-50 shadow-[2px_2px_0_0_rgba(22,163,74,0.5)]",
+  wrong: "border-2 border-red-600 bg-red-50 shadow-[2px_2px_0_0_rgba(220,38,38,0.5)]",
 };
 
 const dotFor = (visual: Visual, isSelected: boolean) => {
@@ -69,7 +69,7 @@ export function ChoiceList({
             <button
               onClick={() => onSelect(i)}
               disabled={checked}
-              className={`w-full flex items-center gap-3 px-4 py-3 border rounded-xl text-left text-sm transition-colors ${styleFor[visual]} disabled:cursor-default`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm text-left text-sm sketch ${styleFor[visual]} disabled:cursor-default`}
             >
               {dotFor(visual, isSelected)}
               <span className="flex-1">{choice}</span>

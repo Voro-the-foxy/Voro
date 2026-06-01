@@ -114,7 +114,7 @@ function ResultBody({
   );
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <Header title={attempt.lectureTitle} onClose={onHome} />
 
       <div className="flex-1 overflow-y-auto">
@@ -150,13 +150,13 @@ function ResultBody({
       <footer className="px-5 pb-5 flex flex-col gap-2">
         <button
           onClick={onRetry}
-          className="w-full py-3 rounded-xl border border-black bg-white text-black text-sm font-medium"
+          className="w-full py-3 rounded-sm border-2 border-black bg-paper text-black text-sm font-medium sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)]"
         >
           Retry
         </button>
         <button
           onClick={onHome}
-          className="w-full py-3 rounded-xl border border-black bg-black text-white text-sm font-medium"
+          className="w-full py-3 rounded-sm border-2 border-black bg-black text-white text-sm font-medium sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)]"
         >
           Done
         </button>
@@ -184,7 +184,7 @@ function ErrorFrame({
   onClose: () => void;
 }) {
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <Header onClose={onClose} />
       <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-sm text-red-700">{message}</p>

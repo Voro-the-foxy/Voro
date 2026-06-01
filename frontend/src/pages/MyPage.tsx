@@ -36,7 +36,7 @@ function MyPage() {
   const initial = session?.user.name?.slice(0, 1).toUpperCase() ?? "?";
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="px-6 pt-6 pb-4 border-b border-black">
         <h1 className="text-lg font-medium">Profile</h1>
       </header>
@@ -45,9 +45,9 @@ function MyPage() {
         {/* User card → /account */}
         <Link
           to="/account"
-          className="flex items-center gap-4 px-4 py-4 border border-black rounded-xl hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-4 px-4 py-4 border-2 border-black rounded-sm hover:bg-paper-dark sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black text-lg font-semibold shrink-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black text-lg font-semibold shrink-0 sketch">
             {initial}
           </div>
           <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -69,9 +69,9 @@ function MyPage() {
                 <Link
                   to={item.to}
                   search={{ from: "mypage" }}
-                  className="flex items-center gap-4 px-4 py-3 border border-black rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 px-4 py-3 border-2 border-black rounded-sm hover:bg-paper-dark sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper"
                 >
-                  <span className="flex items-center justify-center w-9 h-9 rounded-full border border-black shrink-0">
+                  <span className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-black shrink-0 sketch">
                     {item.icon}
                   </span>
                   <span className="flex-1 flex flex-col text-left min-w-0">

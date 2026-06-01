@@ -61,11 +61,11 @@ function Toggle({
         onChange();
       }}
       className={`flex items-center w-10 h-5 p-[2px] rounded-full border border-black transition-colors ${
-        checked ? "bg-black justify-end" : "bg-white justify-start"
+        checked ? "bg-black justify-end" : "bg-paper justify-start"
       }`}
     >
       <span
-        className={`w-3.5 h-3.5 rounded-full ${checked ? "bg-white" : "bg-black"}`}
+        className={`w-3.5 h-3.5 rounded-full ${checked ? "bg-paper" : "bg-black"}`}
       />
     </button>
   );
@@ -125,7 +125,7 @@ function DayChip({
       onClick={onClick}
       aria-pressed={active}
       className={`w-8 h-8 rounded-full border border-black text-xs font-medium transition-colors ${
-        active ? "bg-black text-white" : "bg-white text-black"
+        active ? "bg-black text-white" : "bg-paper text-black"
       }`}
     >
       {day[0]}
@@ -145,7 +145,7 @@ function AlarmRow({
   onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-3 border-b border-gray-300">
+    <div className="mx-3 mt-3 flex items-center gap-2 px-3 py-3 border-2 border-black rounded-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper">
       <IconButton size="sm" onClick={onDelete} aria-label="Delete alarm">
         ✕
       </IconButton>
@@ -156,7 +156,7 @@ function AlarmRow({
       >
         <div className="flex items-baseline gap-1">
           <span className="text-xs text-gray-600">{alarm.period}</span>
-          <span className="text-2xl font-bold tracking-tight">
+          <span className="text-2xl tracking-tight">
             {pad(alarm.hour)}:{pad(alarm.minute)}
           </span>
         </div>
@@ -164,11 +164,7 @@ function AlarmRow({
           {DAYS.map((d) => (
             <span
               key={d}
-              className={
-                alarm.days.includes(d)
-                  ? "font-bold text-black"
-                  : "text-gray-400"
-              }
+              className={alarm.days.includes(d) ? "text-black" : "text-gray-400"}
             >
               {d[0]}
             </span>
@@ -270,7 +266,7 @@ export default function AlarmPage() {
   };
 
   return (
-    <div className="relative flex flex-col h-full bg-white text-black">
+    <div className="relative flex flex-col h-full bg-paper text-black">
       <div className="flex items-center justify-between px-4 py-3 border-b border-black shrink-0">
         <h1 className="text-lg font-bold">Alarm Setting</h1>
         <IconButton onClick={openNew} aria-label="Add alarm">
@@ -278,12 +274,12 @@ export default function AlarmPage() {
         </IconButton>
       </div>
 
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-300 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2 border-2 border-black rounded-sm mx-3 mt-3 mb-2 shrink-0 sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] bg-paper">
         <Toggle
           checked={masterEnabled}
           onChange={() => setMasterEnabled((v) => !v)}
         />
-        <span className="text-sm">Alarm setting</span>
+        <span className="text-sm">Enable alarm notifications</span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -304,10 +300,10 @@ export default function AlarmPage() {
         )}
       </div>
 
-      <div className="p-3 border-t border-gray-300 shrink-0">
+      <div className="p-3 border-t-2 border-black shrink-0">
         <button
           onClick={handleSave}
-          className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm"
+          className="w-full py-2 rounded-sm border-2 border-black bg-black text-white text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)]"
         >
           Save
         </button>
@@ -319,10 +315,10 @@ export default function AlarmPage() {
           onClick={close}
         >
           <div
-            className="w-full max-w-sm bg-white border border-black rounded-2xl flex flex-col p-5 gap-6 shadow-xl max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-sm bg-paper border-2 border-black rounded-sm flex flex-col p-5 gap-6 sketch shadow-[4px_4px_0_0_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-center font-bold text-base border-b border-gray-200 pb-2">
+            <div className="text-center font-bold text-base border-b-2 border-black pb-2">
               {editing ? "Edit Alarm" : "New Alarm"}
             </div>
 
@@ -358,14 +354,14 @@ export default function AlarmPage() {
               <button
                 type="button"
                 onClick={close}
-                className="flex-1 py-2.5 border border-black rounded-xl text-sm bg-white text-black hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 border-2 border-black rounded-sm text-sm bg-paper text-black hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={savePicker}
-                className="flex-1 py-2.5 border border-black rounded-xl text-sm bg-black text-white hover:bg-gray-900 transition-colors"
+                className="flex-1 py-2.5 border-2 border-black rounded-sm text-sm bg-black text-white hover:bg-gray-900 sketch shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]"
               >
                 Save
               </button>

@@ -33,7 +33,7 @@ function SettingPage() {
   const session = loadSession();
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="px-6 pt-6 pb-3 border-b border-black">
         <h1 className="text-lg font-medium">Settings</h1>
       </header>
@@ -42,9 +42,9 @@ function SettingPage() {
         {session && (
           <Link
             to="/mypage"
-            className="mb-4 flex items-center gap-3 border border-black rounded-xl px-4 py-3 hover:bg-gray-50 transition-colors"
+            className="mb-4 flex items-center gap-3 border-2 border-black rounded-sm px-4 py-3 hover:bg-paper-dark transition-colors sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-black text-sm font-medium shrink-0">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-black text-sm font-medium shrink-0 sketch">
               {session.user.name.slice(0, 1).toUpperCase()}
             </span>
             <span className="flex flex-1 flex-col min-w-0">
@@ -61,9 +61,9 @@ function SettingPage() {
               <Link
                 to={item.to}
                 search={{ from: "setting" }}
-                className="flex items-center gap-4 px-4 py-3 border border-black rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-4 px-4 py-3 border-2 border-black rounded-sm hover:bg-paper-dark transition-colors sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper"
               >
-                <span className="flex items-center justify-center w-10 h-10 rounded-full border border-black">
+                <span className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-black sketch">
                   {item.icon}
                 </span>
                 <span className="flex-1 flex flex-col text-left">
