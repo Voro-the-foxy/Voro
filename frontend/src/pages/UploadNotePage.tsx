@@ -125,7 +125,7 @@ function UploadNotePage() {
 
   if (phase !== "idle") {
     return (
-      <div className="flex flex-col h-full bg-white text-black items-center justify-center px-6">
+      <div className="flex flex-col h-full bg-paper text-black items-center justify-center px-6">
         {uploadState === "failed" ? (
           <ErrorOverlay
             message={errorMsg ?? "Upload failed"}
@@ -162,7 +162,7 @@ function UploadNotePage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-black shrink-0">
         <h1 className="text-base font-medium">Upload note</h1>
         <Link to="/home" aria-label="Close" className="p-1 -mr-1">
@@ -194,10 +194,10 @@ function UploadNotePage() {
             <Link
               to="/set-up/schedule"
               search={{ from: "upload" }}
-              className="w-full flex items-center justify-between px-3 py-3 border border-black rounded-lg text-sm"
+              className="w-full flex items-center justify-between px-3 py-3 border-2 border-black rounded-sm text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper hover:bg-paper-dark active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
             >
               <span>Create new lecture in schedule</span>
-              <span className="text-gray-400">→</span>
+              <span>→</span>
             </Link>
           ) : classes.filter((c) => c.slots.length > 0).length === 0 ? (
             <div className="px-3 py-4 border border-dashed border-gray-300 rounded-lg text-xs text-gray-500 text-center flex flex-col gap-2">
@@ -260,7 +260,7 @@ function UploadNotePage() {
           />
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full flex items-center gap-3 px-3 py-3 border border-black rounded-lg text-sm"
+            className="w-full flex items-center gap-3 px-3 py-3 border-2 border-black rounded-sm text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper hover:bg-paper-dark"
           >
             {file ? (
               <>
@@ -289,7 +289,7 @@ function UploadNotePage() {
       </div>
 
       {confirmDeleteTarget ? (
-        <div className="shrink-0 border-t-2 border-black bg-white px-5 pt-4 pb-6 flex flex-col gap-3">
+        <div className="shrink-0 border-t-2 border-black bg-paper px-5 pt-4 pb-6 flex flex-col gap-3">
           <p className="text-sm font-medium">Delete this class?</p>
           <p className="text-xs leading-relaxed text-gray-600">
             {confirmDeleteTarget.name} and{" "}
@@ -306,7 +306,7 @@ function UploadNotePage() {
                 if (!deleting) setConfirmDeleteTarget(null);
               }}
               disabled={deleting}
-              className="h-11 rounded-xl border border-gray-300 text-sm disabled:opacity-40"
+              className="h-11 rounded-sm border-2 border-black text-sm bg-paper hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] disabled:opacity-40"
             >
               Cancel
             </button>
@@ -314,7 +314,7 @@ function UploadNotePage() {
               type="button"
               onClick={() => handleDeleteClass(confirmDeleteTarget)}
               disabled={deleting}
-              className="h-11 rounded-xl border border-red-600 bg-red-600 text-sm text-white disabled:opacity-50"
+              className="h-11 rounded-sm border-2 border-red-600 bg-red-600 text-sm text-white sketch shadow-[2px_2px_0_0_rgba(220,38,38,0.5)] disabled:opacity-50"
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
@@ -331,7 +331,7 @@ function UploadNotePage() {
           <button
             disabled={!canSave || deleting}
             onClick={handleSave}
-            className="w-full py-3 rounded-xl border border-black bg-black text-white text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200"
+            className="w-full py-3 rounded-sm border-2 border-black bg-black text-white text-sm font-medium sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200 disabled:shadow-none"
           >
             Save
           </button>
@@ -373,10 +373,10 @@ function ModeTab({
   return (
     <button
       onClick={onClick}
-      className={`py-2 border rounded-lg text-sm transition-colors ${
+      className={`py-2 border-2 rounded-sm text-sm sketch ${
         active
-          ? "bg-black text-white border-black"
-          : "bg-white text-black border-gray-300"
+          ? "bg-black text-white border-black shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]"
+          : "bg-paper text-black border-black shadow-[2px_2px_0_0_rgba(0,0,0,1)] hover:bg-paper-dark"
       }`}
     >
       {label}
@@ -398,8 +398,10 @@ function ExistingClassRow({
   return (
     <button
       onClick={onSelect}
-      className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg text-sm text-left transition-colors ${
-        selected ? "border-black bg-gray-50" : "border-gray-300 bg-white"
+      className={`w-full flex items-center gap-3 px-3 py-2 border-2 rounded-sm text-sm text-left sketch ${
+        selected
+          ? "border-black bg-paper-dark shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+          : "border-black bg-paper shadow-[2px_2px_0_0_rgba(0,0,0,0.4)] hover:bg-paper-dark"
       }`}
     >
       <span
@@ -446,7 +448,7 @@ function SelectedClassActions({
         <button
           type="button"
           onClick={onReveal}
-          className="rounded-md border border-gray-300 bg-white px-2 py-1 text-[10px] text-gray-500 shadow-[1px_1px_0_0_rgba(0,0,0,0.25)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+          className="rounded-md border border-gray-300 bg-paper px-2 py-1 text-[10px] text-gray-500 shadow-[1px_1px_0_0_rgba(0,0,0,0.25)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
         >
           Manage notes
         </button>
@@ -456,7 +458,7 @@ function SelectedClassActions({
 
   return (
     <div className="mt-1 flex justify-end pr-1">
-      <div className="w-fit max-w-full rounded-md border border-black bg-white px-2.5 py-2 text-[10px] text-gray-600 shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
+      <div className="w-fit max-w-full rounded-md border border-black bg-paper px-2.5 py-2 text-[10px] text-gray-600 shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
         <p className="mb-1.5 text-right leading-tight">
           {noteCount} note{noteCount !== 1 ? "s" : ""} will also be deleted
         </p>
@@ -465,7 +467,7 @@ function SelectedClassActions({
             type="button"
             onClick={onToggleCheck}
             aria-pressed={checked}
-            className="flex items-center gap-1 rounded-sm border border-gray-300 bg-white px-1.5 py-1 hover:border-black"
+            className="flex items-center gap-1 rounded-sm border border-gray-300 bg-paper px-1.5 py-1 hover:border-black"
           >
             <span
               className={[

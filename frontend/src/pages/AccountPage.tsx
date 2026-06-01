@@ -28,7 +28,7 @@ function AccountPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="flex items-center gap-3 px-4 pt-6 pb-4 border-b border-black">
         <button
           onClick={() => void navigate({ to: "/mypage" })}
@@ -41,8 +41,8 @@ function AccountPage() {
 
       <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-5">
         {/* User info */}
-        <div className="flex items-center gap-4 px-4 py-4 border border-black rounded-xl">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black text-lg font-semibold shrink-0">
+        <div className="flex items-center gap-4 px-4 py-4 border-2 border-black rounded-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-black text-lg font-semibold shrink-0 sketch">
             {initial}
           </div>
           <div className="flex flex-col gap-1 min-w-0">
@@ -65,7 +65,7 @@ function AccountPage() {
           </p>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-700 hover:border-black hover:text-black transition-colors"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-sm border-2 border-black text-sm text-black hover:bg-paper-dark sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper"
           >
             <LogOut className="w-4 h-4" />
             <span>Logout</span>
@@ -73,8 +73,8 @@ function AccountPage() {
         </div>
 
         {/* Danger Zone — GitHub style */}
-        <div className="rounded-md border border-red-300 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-red-300 bg-red-50">
+        <div className="rounded-sm border-2 border-red-500 sketch shadow-[3px_3px_0_0_rgba(220,38,38,0.5)] overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b-2 border-red-400 bg-red-50">
             <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
             <span className="text-sm font-semibold text-red-600">
               Danger Zone
@@ -101,7 +101,7 @@ function AccountPage() {
       {/* Delete confirmation modal */}
       {showDeleteModal && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="mx-6 w-full max-w-sm rounded-2xl border border-black bg-white px-6 py-6">
+          <div className="mx-6 w-full max-w-sm rounded-sm border-2 border-black bg-paper px-6 py-6 sketch shadow-[4px_4px_0_0_rgba(0,0,0,1)]">
             <div className="flex items-center gap-2 mb-3">
               <Trash2 className="w-4 h-4 text-red-500" />
               <h2 className="text-base font-semibold">
@@ -115,14 +115,14 @@ function AccountPage() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className="flex-1 rounded-xl border border-black py-2.5 text-sm hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 rounded-sm border-2 border-black py-2.5 text-sm hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)] disabled:opacity-50 bg-paper"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleting}
-                className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                className="flex-1 rounded-sm border-2 border-red-600 bg-red-500 py-2.5 text-sm text-white hover:bg-red-600 sketch shadow-[2px_2px_0_0_rgba(220,38,38,0.5)] disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

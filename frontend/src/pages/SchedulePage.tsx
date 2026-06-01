@@ -169,57 +169,59 @@ function SchedulePage() {
           confirmTarget ? "opacity-40 pointer-events-none" : ""
         }`}
       >
-        <div className="sticky top-0 z-10 bg-white grid grid-cols-[32px_repeat(7,minmax(0,1fr))] text-[10px] border-b border-gray-200">
-          <div />
-          {DAYS.map((d, i) => (
-            <div key={i} className="text-center py-1 font-medium">
-              {d}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-[32px_repeat(7,minmax(0,1fr))] text-[9px]">
-          {Array.from({ length: SLOTS_PER_DAY }).map((_, slot) => (
-            <Fragment key={slot}>
-              <div className="text-right pr-1 h-5 leading-5 text-gray-500">
-                {slot % 2 === 0 ? slotLabel(slot) : ""}
+        <div className="mx-3 mt-3 border-2 border-black rounded-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] overflow-hidden">
+          <div className="bg-paper-dark grid grid-cols-[32px_repeat(7,minmax(0,1fr))] text-[10px] border-b-2 border-black">
+            <div />
+            {DAYS.map((d, i) => (
+              <div key={i} className="text-center py-1">
+                {d}
               </div>
-              {DAYS.map((_, day) => {
-                const key = cellKey(day, slot);
-                const isSelected = selection.has(key);
-                const cls = classOfCell(key);
-                const colorIdx = cls
-                  ? classes.findIndex((c) => c.id === cls.id) %
-                    CLASS_COLORS.length
-                  : -1;
-                const isEditingTarget = cls?.id === editingSlotsForId;
-                const bg = isSelected
-                  ? "bg-sky-400"
-                  : cls
-                    ? isEditingTarget
-                      ? "bg-sky-200"
-                      : CLASS_COLORS[colorIdx]
-                    : "bg-white";
-                const borderT =
-                  slot % 2 === 0
-                    ? "border-t border-gray-300"
-                    : "border-t border-gray-100";
-                return (
-                  <div
-                    key={key}
-                    className={`h-5 border-l border-gray-200 ${borderT} ${bg} cursor-pointer`}
-                    onPointerDown={(e) => handlePointerDown(e, key)}
-                    onPointerEnter={() => handlePointerEnter(key)}
-                  />
-                );
-              })}
-            </Fragment>
-          ))}
+            ))}
+          </div>
+
+          <div className="grid grid-cols-[32px_repeat(7,minmax(0,1fr))] text-[9px]">
+            {Array.from({ length: SLOTS_PER_DAY }).map((_, slot) => (
+              <Fragment key={slot}>
+                <div className="text-right pr-1 h-5 leading-5 text-gray-600">
+                  {slot % 2 === 0 ? slotLabel(slot) : ""}
+                </div>
+                {DAYS.map((_, day) => {
+                  const key = cellKey(day, slot);
+                  const isSelected = selection.has(key);
+                  const cls = classOfCell(key);
+                  const colorIdx = cls
+                    ? classes.findIndex((c) => c.id === cls.id) %
+                      CLASS_COLORS.length
+                    : -1;
+                  const isEditingTarget = cls?.id === editingSlotsForId;
+                  const bg = isSelected
+                    ? "bg-sky-400"
+                    : cls
+                      ? isEditingTarget
+                        ? "bg-sky-200"
+                        : CLASS_COLORS[colorIdx]
+                      : "bg-paper";
+                  const borderT =
+                    slot % 2 === 0
+                      ? "border-t border-black/20"
+                      : "border-t border-black/10";
+                  return (
+                    <div
+                      key={key}
+                      className={`h-5 border-l border-black/15 ${borderT} ${bg} cursor-pointer`}
+                      onPointerDown={(e) => handlePointerDown(e, key)}
+                      onPointerEnter={() => handlePointerEnter(key)}
+                    />
+                  );
+                })}
+              </Fragment>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-col gap-2 p-3 border-t border-gray-200">
+        <div className="flex flex-col gap-2 p-3 border-t-2 border-black">
           {editingSlotsForId && (
-            <div className="flex items-center gap-2 px-2 py-2 mb-1 bg-sky-50 border border-sky-300 rounded text-xs text-sky-800">
+            <div className="flex items-center gap-2 px-2 py-2 mb-1 bg-sky-50 border-2 border-black rounded-sm text-xs text-sky-900 sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]">
               <span className="flex-1">
                 Editing slots for{" "}
                 <strong>
@@ -229,7 +231,7 @@ function SchedulePage() {
               </span>
               <button
                 onClick={cancelEditSlots}
-                className="px-2 py-1 border border-sky-400 rounded"
+                className="px-2 py-1 border-2 border-black rounded-sm text-xs bg-paper hover:bg-paper-dark sketch"
               >
                 Cancel
               </button>
@@ -241,17 +243,17 @@ function SchedulePage() {
             return (
               <div
                 key={c.id}
-                className={`flex items-center gap-1 ${isEditingSlots ? "ring-1 ring-sky-400 rounded" : ""}`}
+                className={`flex items-center gap-1 ${isEditingSlots ? "ring-2 ring-black rounded-sm" : ""}`}
               >
                 <button
-                  className="px-2 py-1 border border-gray-300 rounded text-xs"
+                  className="px-2 py-1 border-2 border-black rounded-sm text-xs bg-paper hover:bg-paper-dark sketch shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
                   onClick={() => setEditingId(editingId === c.id ? null : c.id)}
                 >
                   Rename
                 </button>
                 {editingId === c.id ? (
                   <input
-                    className="flex-1 border border-gray-400 rounded px-2 py-1 text-sm"
+                    className="flex-1 border-2 border-black rounded-sm px-2 py-1 text-sm bg-paper outline-none sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
                     value={c.name}
                     onChange={(e) => renameClass(c.id, e.target.value)}
                     onBlur={() => setEditingId(null)}
@@ -261,8 +263,8 @@ function SchedulePage() {
                     autoFocus
                   />
                 ) : (
-                  <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded px-2 py-1 text-sm">
-                    <span className={`w-3 h-3 rounded-full ${color}`} />
+                  <div className="flex-1 flex items-center gap-2 border-2 border-black rounded-sm px-2 py-1 text-sm bg-paper sketch shadow-[1px_1px_0_0_rgba(0,0,0,1)]">
+                    <span className={`w-3 h-3 rounded-sm ${color}`} />
                     <span className="truncate">{c.name}</span>
                     <span className="ml-auto text-[10px] text-gray-500">
                       {isEditingSlots
@@ -272,7 +274,7 @@ function SchedulePage() {
                   </div>
                 )}
                 <button
-                  className={`px-2 py-1 border rounded text-xs ${isEditingSlots ? "border-sky-500 bg-sky-500 text-white" : "border-gray-300 text-gray-600"}`}
+                  className={`px-2 py-1 border-2 rounded-sm text-xs sketch shadow-[1px_1px_0_0_rgba(0,0,0,1)] ${isEditingSlots ? "border-black bg-black text-white" : "border-black bg-paper text-black hover:bg-paper-dark"}`}
                   onClick={() =>
                     isEditingSlots ? updateSlots() : startEditSlots(c)
                   }
@@ -280,7 +282,7 @@ function SchedulePage() {
                   {isEditingSlots ? "Done" : "Edit"}
                 </button>
                 <button
-                  className="px-2 py-1 border border-gray-300 rounded text-xs text-red-500"
+                  className="px-2 py-1 border-2 border-black rounded-sm text-xs text-red-600 bg-paper hover:bg-red-50 sketch shadow-[1px_1px_0_0_rgba(0,0,0,1)]"
                   onClick={() => setConfirmTarget(c)}
                 >
                   Del
@@ -290,7 +292,7 @@ function SchedulePage() {
           })}
           {!editingSlotsForId && (
             <button
-              className="border border-dashed border-gray-400 rounded py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              className="border-2 border-dashed border-black rounded-sm py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-paper-dark"
               onClick={addClass}
               disabled={selection.size === 0}
             >
@@ -301,7 +303,7 @@ function SchedulePage() {
       </div>
 
       {confirmTarget ? (
-        <div className="shrink-0 border-t-2 border-black bg-white px-5 pt-4 pb-6 flex flex-col gap-3">
+        <div className="shrink-0 border-t-2 border-black bg-paper px-5 pt-4 pb-6 flex flex-col gap-3">
           <p className="text-sm font-medium">Delete this class?</p>
           <p className="text-xs leading-relaxed text-gray-600">
             All notes and quiz records linked to {confirmTarget.name} will also
@@ -311,25 +313,25 @@ function SchedulePage() {
             <button
               type="button"
               onClick={() => setConfirmTarget(null)}
-              className="h-11 rounded-xl border border-gray-300 text-sm"
+              className="h-11 rounded-sm border-2 border-black text-sm bg-paper hover:bg-paper-dark sketch shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={deleteClass}
-              className="h-11 rounded-xl border border-red-600 bg-red-600 text-sm text-white"
+              className="h-11 rounded-sm border-2 border-red-600 bg-red-600 text-sm text-white sketch shadow-[2px_2px_0_0_rgba(220,38,38,0.5)]"
             >
               Delete
             </button>
           </div>
         </div>
       ) : (
-        <div className="p-3 border-t border-gray-300 shrink-0">
+        <div className="p-3 border-t-2 border-black shrink-0">
           <button
             onClick={handleSave}
             disabled={classes.length === 0}
-            className="w-full py-2 rounded-lg border border-black bg-black text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-2 rounded-sm border-2 border-black bg-black text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)]"
           >
             Save
           </button>

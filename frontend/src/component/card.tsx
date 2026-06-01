@@ -8,7 +8,7 @@ export function Card(props: {
 }) {
   return (
     <div>
-      <div className="p-6 bg-white border border-black text-black">
+      <div className="p-6 bg-paper border-2 border-black text-black sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
         <div className="flex items-center w-full gap-3">
           {props.src ? (
             <img className="w-10 h-10" src={props.src} alt="logo" />

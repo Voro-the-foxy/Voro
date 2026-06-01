@@ -41,7 +41,7 @@ function QuizSelectPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <div className="flex-1 overflow-y-auto px-6 pt-6 pb-6">
         <div className="flex items-start justify-between">
           <div>
@@ -127,18 +127,18 @@ function ClassCard({
       : "no document yet";
   const disabled = !hasDocument;
   const baseClass = [
-    "group block bg-white border border-black rounded-md",
+    "group block bg-paper border-2 border-black rounded-sm",
     "shadow-[3px_3px_0_0_rgba(0,0,0,1)]",
     "transition-transform active:translate-x-[1px] active:translate-y-[1px]",
-    "active:shadow-[2px_2px_0_0_rgba(0,0,0,1)]",
-    "hover:bg-gray-50",
+    "active:shadow-[1px_1px_0_0_rgba(0,0,0,1)]",
+    "hover:bg-paper-dark sketch",
     tilt,
     disabled ? "opacity-50 pointer-events-none" : "",
   ].join(" ");
 
   const inner = (
     <div className="flex items-center gap-3 p-3">
-      <div className="flex items-center justify-center w-12 h-12 border border-black rounded-md text-xl font-medium shrink-0">
+      <div className="flex items-center justify-center w-12 h-12 border-2 border-black rounded-sm text-xl font-medium shrink-0 bg-paper sketch">
         {badge}
       </div>
       <div className="flex-1 min-w-0">

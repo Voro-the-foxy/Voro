@@ -67,7 +67,7 @@ function SetupNotesPage() {
 
   if (phase !== "idle") {
     return (
-      <div className="flex flex-col h-full bg-white text-black items-center justify-center px-6">
+      <div className="flex flex-col h-full bg-paper text-black items-center justify-center px-6">
         {uploadState === "failed" ? (
           <div className="flex flex-col items-center gap-4 max-w-xs">
             <p className="text-base text-red-700 text-center">
@@ -107,7 +107,7 @@ function SetupNotesPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <header className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-black shrink-0">
         <h1 className="text-base font-medium">Upload note</h1>
         <button
@@ -140,10 +140,10 @@ function SetupNotesPage() {
                   <li key={c.id}>
                     <button
                       onClick={() => setSelectedClassId(c.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg text-sm text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 border-2 rounded-sm text-sm text-left sketch ${
                         selectedClassId === c.id
-                          ? "border-black bg-gray-50"
-                          : "border-gray-300 bg-white"
+                          ? "border-black bg-paper-dark shadow-[2px_2px_0_0_rgba(0,0,0,1)]"
+                          : "border-black bg-paper shadow-[2px_2px_0_0_rgba(0,0,0,0.4)] hover:bg-paper-dark"
                       }`}
                     >
                       <span
@@ -186,7 +186,7 @@ function SetupNotesPage() {
           />
           <button
             onClick={() => fileRef.current?.click()}
-            className="w-full flex items-center gap-3 px-3 py-3 border border-black rounded-lg text-sm"
+            className="w-full flex items-center gap-3 px-3 py-3 border-2 border-black rounded-sm text-sm sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper hover:bg-paper-dark"
           >
             {file ? (
               <>
@@ -218,7 +218,7 @@ function SetupNotesPage() {
         <button
           disabled={!canSave}
           onClick={handleSave}
-          className="w-full py-3 rounded-xl border border-black bg-black text-white text-sm font-medium disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200"
+          className="w-full py-3 rounded-sm border-2 border-black bg-black text-white text-sm font-medium sketch shadow-[3px_3px_0_0_rgba(0,0,0,0.3)] disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-200 disabled:shadow-none"
         >
           Save
         </button>

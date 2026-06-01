@@ -25,7 +25,7 @@ function HomePage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full bg-white text-black">
+    <div className="flex flex-col h-full bg-paper text-black">
       <StreakBadge days={solvedQuizzes} />
       <FoxIntro message="I`m voro!!" />
       <StatRow devouredNotes={devouredNotes} solvedQuizzes={solvedQuizzes} />
@@ -40,7 +40,7 @@ function HomePage() {
 function StreakBadge({ days }: { days: number }) {
   return (
     <div className="px-6 pt-6">
-      <div className="flex items-center justify-center gap-3 px-6 py-3 border border-black rounded-full">
+      <div className="flex items-center justify-center gap-3 px-6 py-3 border-2 border-black rounded-full sketch bg-paper-dark">
         <Flame className="w-5 h-5" />
         <span className="text-base font-medium">{days} day streak</span>
       </div>
@@ -59,7 +59,7 @@ function FoxIntro({ message }: { message: string }) {
         style={{ width: 110, height: 120 }}
       />
       <div className="relative mb-6">
-        <div className="px-5 py-3 border border-black rounded-2xl">
+        <div className="px-5 py-3 border-2 border-black rounded-2xl sketch bg-paper shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
           <span className="text-sm italic">{message}</span>
         </div>
         <div className="absolute left-[-8px] bottom-3 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[10px] border-r-black" />
@@ -105,7 +105,7 @@ function StatTile({
   to?: string;
 }) {
   const tile = (
-    <div className="flex flex-col items-center justify-center w-24 h-24 border border-black rounded-2xl gap-1 transition-colors hover:bg-gray-50">
+    <div className="flex flex-col items-center justify-center w-24 h-24 border-2 border-black rounded-md gap-1 transition-colors hover:bg-paper-dark sketch shadow-[3px_3px_0_0_rgba(0,0,0,1)] bg-paper">
       {icon}
       <span className="text-sm">{count} notes</span>
     </div>
