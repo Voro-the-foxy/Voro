@@ -9,6 +9,7 @@ import (
 
 	"voro/backend/internal/domain"
 	apperrors "voro/backend/internal/shared/errors"
+	"voro/backend/internal/shared/gen"
 )
 
 type AuthGateway struct {
@@ -19,6 +20,36 @@ func NewAuthGateway(db *sql.DB) *AuthGateway {
 	g := &AuthGateway{db: db}
 	g.seedUser("demo@voro.app", "voro1234", "Voro Learner")
 	return g
+}
+
+func (g *AuthGateway) Signup(email, name, password string) (domain.Session, error) {
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+	if name == "" {
+		name = normalizedEmail
+	}
+
+	user := domain.User{ID: "user_" + gen.NewID(), Email: normalizedEmail, Name: name}
+	res, err := g.db.Exec(`
+		INSERT INTO users(id, email, name, password_hash)
+		VALUES($1,$2,$3,$4)
+		ON CONFLICT(email) DO NOTHING`,
+		user.ID, normalizedEmail, name, hashPassword(password),
+	)
+	if err != nil {
+		return domain.Session{}, apperrors.ErrInternalServer
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		return domain.Session{}, apperrors.ErrEmailTaken
+	}
+
+	token, err := newToken()
+	if err != nil {
+		return domain.Session{}, apperrors.ErrInternalServer
+	}
+	if _, err := g.db.Exec(`INSERT INTO sessions(token, user_email) VALUES($1,$2)`, token, normalizedEmail); err != nil {
+		return domain.Session{}, apperrors.ErrInternalServer
+	}
+	return domain.Session{Token: token, User: user}, nil
 }
 
 func (g *AuthGateway) Login(email, password string) (domain.Session, error) {

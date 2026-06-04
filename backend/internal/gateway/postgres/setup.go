@@ -16,9 +16,22 @@ func NewSetupGateway(db *sql.DB) *SetupGateway {
 	return &SetupGateway{db: db}
 }
 
-func (g *SetupGateway) Get() (domain.SetupState, error) {
+// ensureRow creates the per-user setup row on first access so Get/MarkStep can
+// assume it exists.
+func (g *SetupGateway) ensureRow(userID string) error {
+	if _, err := g.db.Exec(`INSERT INTO setup(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING`, userID); err != nil {
+		log.Printf("setup ensureRow: %v", err)
+		return apperrors.ErrInternalServer
+	}
+	return nil
+}
+
+func (g *SetupGateway) Get(userID string) (domain.SetupState, error) {
+	if err := g.ensureRow(userID); err != nil {
+		return domain.SetupState{}, err
+	}
 	var s domain.SetupState
-	if err := g.db.QueryRow(`SELECT schedule, alarm, exam, notes FROM setup WHERE id=1`).
+	if err := g.db.QueryRow(`SELECT schedule, alarm, exam, notes FROM setup WHERE user_id=$1`, userID).
 		Scan(&s.Schedule, &s.Alarm, &s.Exam, &s.Notes); err != nil {
 		log.Printf("setup Get: %v", err)
 		return domain.SetupState{}, apperrors.ErrInternalServer
@@ -26,10 +39,14 @@ func (g *SetupGateway) Get() (domain.SetupState, error) {
 	return s, nil
 }
 
-func (g *SetupGateway) MarkStep(step string) (domain.SetupState, error) {
-	if _, err := g.db.Exec(`UPDATE setup SET `+step+`=true WHERE id=1`); err != nil {
+func (g *SetupGateway) MarkStep(userID, step string) (domain.SetupState, error) {
+	if err := g.ensureRow(userID); err != nil {
+		return domain.SetupState{}, err
+	}
+	// step is validated against an allowlist in the service layer before reaching here.
+	if _, err := g.db.Exec(`UPDATE setup SET `+step+`=true WHERE user_id=$1`, userID); err != nil {
 		log.Printf("setup MarkStep %s: %v", step, err)
 		return domain.SetupState{}, apperrors.ErrInternalServer
 	}
-	return g.Get()
+	return g.Get(userID)
 }

@@ -3,8 +3,8 @@ package class
 import "voro/backend/internal/domain"
 
 type Gateway interface {
-	List() ([]domain.ClassItem, error)
-	ReplaceAll(classes []domain.ClassItem) ([]domain.ClassItem, error)
-	Add(c domain.ClassItem) (domain.ClassItem, error)
-	Delete(id string) error
+	List(userID string) ([]domain.ClassItem, error)
+	ReplaceAll(userID string, classes []domain.ClassItem) ([]domain.ClassItem, error)
+	Add(userID string, c domain.ClassItem) (domain.ClassItem, error)
+	Delete(userID, id string) error
 }

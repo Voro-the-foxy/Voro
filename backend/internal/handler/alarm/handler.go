@@ -23,7 +23,11 @@ func toDTO(a domain.Alarm) DTO {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	alarms, err := h.Service.List()
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
+	alarms, err := h.Service.List(userID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -36,6 +40,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req []DTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
@@ -49,7 +57,7 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 		}
 		alarms[i] = domain.Alarm{ID: a.ID, Hour: a.Hour, Minute: a.Minute, Period: a.Period, Days: days, Enabled: a.Enabled}
 	}
-	result, err := h.Service.ReplaceAll(alarms)
+	result, err := h.Service.ReplaceAll(userID, alarms)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -62,7 +70,11 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
-	enabled, err := h.Service.GetMaster()
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
+	enabled, err := h.Service.GetMaster(userID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -71,12 +83,16 @@ func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SetMaster(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req MasterDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.SetMaster(req.Enabled); err != nil {
+	if err := h.Service.SetMaster(userID, req.Enabled); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}

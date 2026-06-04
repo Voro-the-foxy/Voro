@@ -35,8 +35,12 @@ func toDTO(a domain.Attempt) DTO {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	classID := r.URL.Query().Get("classId")
-	attempts, err := h.Service.List(classID)
+	attempts, err := h.Service.List(userID, classID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -49,12 +53,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	a, err := h.Service.GetByID(id)
+	a, err := h.Service.GetByID(userID, id)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -63,12 +71,16 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ClassID == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	a, err := h.Service.Save(domain.Attempt{
+	a, err := h.Service.Save(userID, domain.Attempt{
 		ClassID:        req.ClassID,
 		QuizID:         req.QuizID,
 		LectureTitle:   req.LectureTitle,
@@ -86,12 +98,16 @@ func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteByClass(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	classID := r.URL.Query().Get("classId")
 	if classID == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.DeleteByClass(classID); err != nil {
+	if err := h.Service.DeleteByClass(userID, classID); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}

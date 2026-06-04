@@ -14,8 +14,12 @@ type Handler struct {
 }
 
 func (h *Handler) ListByClass(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	classID := r.URL.Query().Get("classId")
-	notes, err := h.Service.ListByClass(classID)
+	notes, err := h.Service.ListByClass(userID, classID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -31,12 +35,16 @@ func (h *Handler) ListByClass(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ClassID == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	n, err := h.Service.Add(req.ClassID, req.Filename, req.Size, req.DocumentID)
+	n, err := h.Service.Add(userID, req.ClassID, req.Filename, req.Size, req.DocumentID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -48,12 +56,16 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.Delete(id); err != nil {
+	if err := h.Service.Delete(userID, id); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}
@@ -61,12 +73,16 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteByClass(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	classID := r.URL.Query().Get("classId")
 	if classID == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.DeleteByClass(classID); err != nil {
+	if err := h.Service.DeleteByClass(userID, classID); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}

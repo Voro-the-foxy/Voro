@@ -9,18 +9,18 @@ type Service struct {
 	Gateway Gateway
 }
 
-func (s *Service) List() ([]domain.ClassItem, error) {
-	return s.Gateway.List()
+func (s *Service) List(userID string) ([]domain.ClassItem, error) {
+	return s.Gateway.List(userID)
 }
 
-func (s *Service) ReplaceAll(classes []domain.ClassItem) ([]domain.ClassItem, error) {
-	return s.Gateway.ReplaceAll(classes)
+func (s *Service) ReplaceAll(userID string, classes []domain.ClassItem) ([]domain.ClassItem, error) {
+	return s.Gateway.ReplaceAll(userID, classes)
 }
 
-func (s *Service) Add(name string) (domain.ClassItem, error) {
-	return s.Gateway.Add(domain.ClassItem{ID: gen.NewID(), Name: name, Slots: []string{}})
+func (s *Service) Add(userID, name string) (domain.ClassItem, error) {
+	return s.Gateway.Add(userID, domain.ClassItem{ID: gen.NewID(), Name: name, Slots: []string{}})
 }
 
-func (s *Service) Delete(id string) error {
-	return s.Gateway.Delete(id)
+func (s *Service) Delete(userID, id string) error {
+	return s.Gateway.Delete(userID, id)
 }

@@ -17,6 +17,12 @@ type LoginBody = {
   password: string;
 };
 
+type SignupBody = {
+  email: string;
+  name: string;
+  password: string;
+};
+
 export function loadSession(): AuthSession | null {
   return readJSON<AuthSession | null>(STORAGE_KEYS.authSession, null);
 }
@@ -60,6 +66,12 @@ export async function ensureValidSession(): Promise<void> {
 
 export async function login(body: LoginBody): Promise<AuthSession> {
   const session = await api.post<AuthSession>("/api/auth/login", body);
+  saveSession(session);
+  return session;
+}
+
+export async function signup(body: SignupBody): Promise<AuthSession> {
+  const session = await api.post<AuthSession>("/api/auth/signup", body);
   saveSession(session);
   return session;
 }

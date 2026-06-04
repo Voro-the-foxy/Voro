@@ -33,6 +33,23 @@ func ApplyMigrations(db *sql.DB) error {
 		END $$;
 	`)
 
+	// Drop the old singleton master/setup tables (keyed by a fixed id=1 row,
+	// shared by every user) so they can be recreated per-user below.
+	_, _ = db.Exec(`
+		DO $$
+		BEGIN
+			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='setup' AND column_name='id') THEN
+				DROP TABLE setup;
+			END IF;
+			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='alarm_master' AND column_name='id') THEN
+				DROP TABLE alarm_master;
+			END IF;
+			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='exam_master' AND column_name='id') THEN
+				DROP TABLE exam_master;
+			END IF;
+		END $$;
+	`)
+
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS users (
 			id            TEXT PRIMARY KEY,
@@ -47,37 +64,43 @@ func ApplyMigrations(db *sql.DB) error {
 		);
 
 		CREATE TABLE IF NOT EXISTS classes (
-			id    TEXT PRIMARY KEY,
-			name  TEXT NOT NULL,
-			slots JSONB NOT NULL DEFAULT '[]'
+			id      TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL DEFAULT '',
+			name    TEXT NOT NULL,
+			slots   JSONB NOT NULL DEFAULT '[]'
 		);
+		ALTER TABLE classes ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
 
 		CREATE TABLE IF NOT EXISTS notes (
 			id          TEXT PRIMARY KEY,
+			user_id     TEXT NOT NULL DEFAULT '',
 			class_id    TEXT NOT NULL,
 			filename    TEXT NOT NULL,
 			size        BIGINT NOT NULL,
 			added_at    BIGINT NOT NULL,
 			document_id TEXT NOT NULL DEFAULT ''
 		);
+		ALTER TABLE notes ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
 
 		CREATE TABLE IF NOT EXISTS alarms (
 			id      TEXT PRIMARY KEY,
+			user_id TEXT NOT NULL DEFAULT '',
 			hour    INT NOT NULL,
 			minute  INT NOT NULL,
 			period  TEXT NOT NULL,
 			days    JSONB NOT NULL DEFAULT '[]',
 			enabled BOOLEAN NOT NULL DEFAULT true
 		);
+		ALTER TABLE alarms ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
 
 		CREATE TABLE IF NOT EXISTS alarm_master (
-			id      INT PRIMARY KEY DEFAULT 1,
+			user_id TEXT PRIMARY KEY,
 			enabled BOOLEAN NOT NULL DEFAULT true
 		);
-		INSERT INTO alarm_master(id, enabled) VALUES (1, true) ON CONFLICT DO NOTHING;
 
 		CREATE TABLE IF NOT EXISTS exams (
 			id         TEXT PRIMARY KEY,
+			user_id    TEXT NOT NULL DEFAULT '',
 			class_name TEXT NOT NULL,
 			year       INT NOT NULL,
 			month      INT NOT NULL,
@@ -87,25 +110,24 @@ func ApplyMigrations(db *sql.DB) error {
 			period     TEXT NOT NULL,
 			enabled    BOOLEAN NOT NULL DEFAULT true
 		);
+		ALTER TABLE exams ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
 
 		CREATE TABLE IF NOT EXISTS exam_master (
-			id      INT PRIMARY KEY DEFAULT 1,
+			user_id TEXT PRIMARY KEY,
 			enabled BOOLEAN NOT NULL DEFAULT true
 		);
-		INSERT INTO exam_master(id, enabled) VALUES (1, true) ON CONFLICT DO NOTHING;
 
 		CREATE TABLE IF NOT EXISTS setup (
-			id       INT PRIMARY KEY DEFAULT 1,
+			user_id  TEXT PRIMARY KEY,
 			schedule BOOLEAN NOT NULL DEFAULT false,
 			alarm    BOOLEAN NOT NULL DEFAULT false,
 			exam     BOOLEAN NOT NULL DEFAULT false,
 			notes    BOOLEAN NOT NULL DEFAULT false
 		);
-		INSERT INTO setup(id) VALUES (1) ON CONFLICT DO NOTHING;
-		ALTER TABLE setup ADD COLUMN IF NOT EXISTS notes BOOLEAN NOT NULL DEFAULT false;
 
 		CREATE TABLE IF NOT EXISTS attempts (
 			id              TEXT PRIMARY KEY,
+			user_id         TEXT NOT NULL DEFAULT '',
 			class_id        TEXT NOT NULL,
 			quiz_id         TEXT NOT NULL,
 			lecture_title   TEXT NOT NULL,
@@ -116,6 +138,7 @@ func ApplyMigrations(db *sql.DB) error {
 			total           INT NOT NULL DEFAULT 0,
 			completed_at    BIGINT NOT NULL DEFAULT 0
 		);
+		ALTER TABLE attempts ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT '';
 	`)
 	return err
 }

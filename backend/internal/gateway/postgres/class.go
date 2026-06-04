@@ -16,8 +16,8 @@ func NewClassGateway(db *sql.DB) *ClassGateway {
 	return &ClassGateway{db: db}
 }
 
-func (g *ClassGateway) List() ([]domain.ClassItem, error) {
-	rows, err := g.db.Query(`SELECT id, name, slots FROM classes ORDER BY name`)
+func (g *ClassGateway) List(userID string) ([]domain.ClassItem, error) {
+	rows, err := g.db.Query(`SELECT id, name, slots FROM classes WHERE user_id=$1 ORDER BY name`, userID)
 	if err != nil {
 		log.Printf("class List: %v", err)
 		return nil, apperrors.ErrInternalServer
@@ -44,7 +44,7 @@ func (g *ClassGateway) List() ([]domain.ClassItem, error) {
 	return out, nil
 }
 
-func (g *ClassGateway) ReplaceAll(classes []domain.ClassItem) ([]domain.ClassItem, error) {
+func (g *ClassGateway) ReplaceAll(userID string, classes []domain.ClassItem) ([]domain.ClassItem, error) {
 	tx, err := g.db.Begin()
 	if err != nil {
 		log.Printf("class ReplaceAll begin tx: %v", err)
@@ -52,7 +52,7 @@ func (g *ClassGateway) ReplaceAll(classes []domain.ClassItem) ([]domain.ClassIte
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec(`DELETE FROM classes`); err != nil {
+	if _, err := tx.Exec(`DELETE FROM classes WHERE user_id=$1`, userID); err != nil {
 		log.Printf("class ReplaceAll delete: %v", err)
 		return nil, apperrors.ErrInternalServer
 	}
@@ -60,8 +60,8 @@ func (g *ClassGateway) ReplaceAll(classes []domain.ClassItem) ([]domain.ClassIte
 		if c.Slots == nil {
 			c.Slots = []string{}
 		}
-		if _, err := tx.Exec(`INSERT INTO classes(id, name, slots) VALUES($1,$2,$3)`,
-			c.ID, c.Name, jsonMarshal(c.Slots)); err != nil {
+		if _, err := tx.Exec(`INSERT INTO classes(id, user_id, name, slots) VALUES($1,$2,$3,$4)`,
+			c.ID, userID, c.Name, jsonMarshal(c.Slots)); err != nil {
 			log.Printf("class ReplaceAll insert: %v", err)
 			return nil, apperrors.ErrInternalServer
 		}
@@ -70,23 +70,23 @@ func (g *ClassGateway) ReplaceAll(classes []domain.ClassItem) ([]domain.ClassIte
 		log.Printf("class ReplaceAll commit: %v", err)
 		return nil, apperrors.ErrInternalServer
 	}
-	return g.List()
+	return g.List(userID)
 }
 
-func (g *ClassGateway) Add(c domain.ClassItem) (domain.ClassItem, error) {
+func (g *ClassGateway) Add(userID string, c domain.ClassItem) (domain.ClassItem, error) {
 	if c.Slots == nil {
 		c.Slots = []string{}
 	}
-	if _, err := g.db.Exec(`INSERT INTO classes(id, name, slots) VALUES($1,$2,$3)`,
-		c.ID, c.Name, jsonMarshal(c.Slots)); err != nil {
+	if _, err := g.db.Exec(`INSERT INTO classes(id, user_id, name, slots) VALUES($1,$2,$3,$4)`,
+		c.ID, userID, c.Name, jsonMarshal(c.Slots)); err != nil {
 		log.Printf("class Add: %v", err)
 		return domain.ClassItem{}, apperrors.ErrInternalServer
 	}
 	return c, nil
 }
 
-func (g *ClassGateway) Delete(id string) error {
-	res, err := g.db.Exec(`DELETE FROM classes WHERE id=$1`, id)
+func (g *ClassGateway) Delete(userID, id string) error {
+	res, err := g.db.Exec(`DELETE FROM classes WHERE id=$1 AND user_id=$2`, id, userID)
 	if err != nil {
 		log.Printf("class Delete: %v", err)
 		return apperrors.ErrInternalServer

@@ -16,13 +16,13 @@ type Service struct {
 	Gateway Gateway
 }
 
-func (s *Service) Get() (domain.SetupState, error) {
-	return s.Gateway.Get()
+func (s *Service) Get(userID string) (domain.SetupState, error) {
+	return s.Gateway.Get(userID)
 }
 
-func (s *Service) MarkStep(step string) (domain.SetupState, error) {
+func (s *Service) MarkStep(userID, step string) (domain.SetupState, error) {
 	if !validSteps[step] {
 		return domain.SetupState{}, apperrors.ErrInvalidRequest
 	}
-	return s.Gateway.MarkStep(step)
+	return s.Gateway.MarkStep(userID, step)
 }

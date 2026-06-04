@@ -3,6 +3,6 @@ package setup
 import "voro/backend/internal/domain"
 
 type Gateway interface {
-	Get() (domain.SetupState, error)
-	MarkStep(step string) (domain.SetupState, error)
+	Get(userID string) (domain.SetupState, error)
+	MarkStep(userID, step string) (domain.SetupState, error)
 }
