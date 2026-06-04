@@ -22,7 +22,11 @@ func toDTO(e domain.Exam) DTO {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	exams, err := h.Service.List()
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
+	exams, err := h.Service.List(userID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -35,6 +39,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req []DTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
@@ -47,7 +55,7 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 			Day: e.Day, Hour: e.Hour, Minute: e.Minute, Period: e.Period, Enabled: e.Enabled,
 		}
 	}
-	result, err := h.Service.ReplaceAll(exams)
+	result, err := h.Service.ReplaceAll(userID, exams)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -60,7 +68,11 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
-	enabled, err := h.Service.GetMaster()
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
+	enabled, err := h.Service.GetMaster(userID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -69,12 +81,16 @@ func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SetMaster(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req MasterDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.SetMaster(req.Enabled); err != nil {
+	if err := h.Service.SetMaster(userID, req.Enabled); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}

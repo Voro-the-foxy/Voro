@@ -6,18 +6,26 @@ import (
 	"voro/backend/internal/domain"
 )
 
-type mockGateway struct{}
+type mockGateway struct {
+	lastUserID string
+}
 
-func (m *mockGateway) ListByClass(classID string) ([]domain.Attempt, error) {
+func (m *mockGateway) ListByClass(userID, classID string) ([]domain.Attempt, error) {
+	m.lastUserID = userID
 	return []domain.Attempt{}, nil
 }
-func (m *mockGateway) GetByID(id string) (domain.Attempt, error) { return domain.Attempt{}, nil }
-func (m *mockGateway) Add(a domain.Attempt) (domain.Attempt, error) { return a, nil }
-func (m *mockGateway) DeleteByClass(classID string) error           { return nil }
+func (m *mockGateway) GetByID(userID, id string) (domain.Attempt, error) {
+	return domain.Attempt{}, nil
+}
+func (m *mockGateway) Add(userID string, a domain.Attempt) (domain.Attempt, error) {
+	m.lastUserID = userID
+	return a, nil
+}
+func (m *mockGateway) DeleteByClass(userID, classID string) error { return nil }
 
 func TestSave_GeneratesID(t *testing.T) {
 	svc := &Service{Gateway: &mockGateway{}}
-	result, err := svc.Save(domain.Attempt{ClassID: "c1"})
+	result, err := svc.Save("user1", domain.Attempt{ClassID: "c1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +36,7 @@ func TestSave_GeneratesID(t *testing.T) {
 
 func TestSave_SetsCompletedAt(t *testing.T) {
 	svc := &Service{Gateway: &mockGateway{}}
-	result, err := svc.Save(domain.Attempt{ClassID: "c1"})
+	result, err := svc.Save("user1", domain.Attempt{ClassID: "c1"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +47,7 @@ func TestSave_SetsCompletedAt(t *testing.T) {
 
 func TestSave_CalculatesTotal(t *testing.T) {
 	svc := &Service{Gateway: &mockGateway{}}
-	result, err := svc.Save(domain.Attempt{
+	result, err := svc.Save("user1", domain.Attempt{
 		ClassID:     "c1",
 		QuestionIDs: []string{"q1", "q2", "q3"},
 	})
@@ -53,7 +61,7 @@ func TestSave_CalculatesTotal(t *testing.T) {
 
 func TestSave_PreservesExplicitTotal(t *testing.T) {
 	svc := &Service{Gateway: &mockGateway{}}
-	result, err := svc.Save(domain.Attempt{
+	result, err := svc.Save("user1", domain.Attempt{
 		ClassID:     "c1",
 		QuestionIDs: []string{"q1", "q2"},
 		Total:       10,
@@ -63,5 +71,16 @@ func TestSave_PreservesExplicitTotal(t *testing.T) {
 	}
 	if result.Total != 10 {
 		t.Errorf("expected Total=10 (explicit), got %d", result.Total)
+	}
+}
+
+func TestSave_PassesUserIDToGateway(t *testing.T) {
+	gw := &mockGateway{}
+	svc := &Service{Gateway: gw}
+	if _, err := svc.Save("user42", domain.Attempt{ClassID: "c1"}); err != nil {
+		t.Fatal(err)
+	}
+	if gw.lastUserID != "user42" {
+		t.Errorf("expected gateway to receive userID=user42, got %q", gw.lastUserID)
 	}
 }

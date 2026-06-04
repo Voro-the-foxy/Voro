@@ -14,6 +14,23 @@ type Handler struct {
 	Service *authsvc.Service
 }
 
+func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
+	var req SignupRequestDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+	session, err := h.Service.Signup(req.Email, req.Name, req.Password)
+	if err != nil {
+		httputil.WriteError(w, err)
+		return
+	}
+	httputil.WriteJSON(w, http.StatusCreated, LoginResponseDTO{
+		Token: session.Token,
+		User:  toUserDTO(session.User),
+	})
+}
+
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequestDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

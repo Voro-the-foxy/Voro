@@ -15,7 +15,11 @@ type Handler struct {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	classes, err := h.Service.List()
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
+	classes, err := h.Service.List(userID)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -32,6 +36,10 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req []ItemDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
@@ -45,7 +53,7 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 		}
 		classes[i] = domain.ClassItem{ID: c.ID, Name: c.Name, Slots: slots}
 	}
-	result, err := h.Service.ReplaceAll(classes)
+	result, err := h.Service.ReplaceAll(userID, classes)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -62,6 +70,10 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	var req struct {
 		Name  string   `json:"name"`
 		Slots []string `json:"slots"`
@@ -70,7 +82,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	c, err := h.Service.Add(req.Name)
+	c, err := h.Service.Add(userID, req.Name)
 	if err != nil {
 		httputil.WriteError(w, err)
 		return
@@ -83,12 +95,16 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
+	userID, ok := httputil.UserID(w, r)
+	if !ok {
+		return
+	}
 	id := r.PathValue("id")
 	if id == "" {
 		httputil.WriteError(w, apperrors.ErrInvalidRequest)
 		return
 	}
-	if err := h.Service.Delete(id); err != nil {
+	if err := h.Service.Delete(userID, id); err != nil {
 		httputil.WriteError(w, err)
 		return
 	}

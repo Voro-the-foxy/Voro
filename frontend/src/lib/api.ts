@@ -14,6 +14,17 @@ export class ApiError extends Error {
   }
 }
 
+function extractErrorMessage(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const msg = parsed["error"] ?? parsed["message"];
+    if (typeof msg === "string" && msg) return msg;
+  } catch {
+    // plain text
+  }
+  return raw.trim();
+}
+
 function authHeaders(): Record<string, string> {
   try {
     const raw = localStorage.getItem("voro.auth.session.v1");
@@ -44,12 +55,13 @@ async function request<T>(
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) {
-    const body = await res.text();
+    const raw = await res.text();
+    const message = extractErrorMessage(raw);
     if (res.status === 401) {
       localStorage.removeItem("voro.auth.session.v1");
       window.dispatchEvent(new Event("voro-session-expired"));
     }
-    throw new ApiError(res.status, body);
+    throw new ApiError(res.status, message);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
@@ -63,12 +75,13 @@ async function uploadMultipart<T>(path: string, formData: FormData): Promise<T> 
     signal: AbortSignal.timeout(30000),
   });
   if (!res.ok) {
-    const body = await res.text();
+    const raw = await res.text();
+    const message = extractErrorMessage(raw);
     if (res.status === 401) {
       localStorage.removeItem("voro.auth.session.v1");
       window.dispatchEvent(new Event("voro-session-expired"));
     }
-    throw new ApiError(res.status, body);
+    throw new ApiError(res.status, message);
   }
   return res.json() as Promise<T>;
 }

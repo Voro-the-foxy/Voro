@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingRouteImport } from './routes/setting'
 import { Route as MypageRouteImport } from './routes/mypage'
 import { Route as LoginRouteImport } from './routes/login'
@@ -29,6 +30,11 @@ import { Route as QuizClassIdResultAttemptIdRouteImport } from './routes/quiz/$c
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingRoute = SettingRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mypage': typeof MypageRoute
   '/setting': typeof SettingRoute
+  '/signup': typeof SignupRoute
   '/welcome': typeof WelcomeRoute
   '/notes/upload': typeof NotesUploadRoute
   '/quiz/$classId': typeof QuizClassIdRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mypage'
     | '/setting'
+    | '/signup'
     | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mypage'
     | '/setting'
+    | '/signup'
     | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mypage'
     | '/setting'
+    | '/signup'
     | '/welcome'
     | '/notes/upload'
     | '/quiz/$classId'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MypageRoute: typeof MypageRoute
   SettingRoute: typeof SettingRoute
+  SignupRoute: typeof SignupRoute
   WelcomeRoute: typeof WelcomeRoute
   NotesUploadRoute: typeof NotesUploadRoute
   QuizClassIdRoute: typeof QuizClassIdRoute
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/setting': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MypageRoute: MypageRoute,
   SettingRoute: SettingRoute,
+  SignupRoute: SignupRoute,
   WelcomeRoute: WelcomeRoute,
   NotesUploadRoute: NotesUploadRoute,
   QuizClassIdRoute: QuizClassIdRoute,

@@ -17,6 +17,7 @@ var (
 	ErrInternalServer     = &AppError{Code: http.StatusInternalServerError, Message: "internal server error"}
 	ErrInvalidCredentials = &AppError{Code: http.StatusUnauthorized, Message: "invalid email or password"}
 	ErrInvalidToken       = &AppError{Code: http.StatusUnauthorized, Message: "invalid or expired token"}
+	ErrEmailTaken         = &AppError{Code: http.StatusConflict, Message: "email already registered"}
 )
 
 // AppError implements the error interface.

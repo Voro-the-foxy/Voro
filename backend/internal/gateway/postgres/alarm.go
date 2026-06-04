@@ -16,8 +16,8 @@ func NewAlarmGateway(db *sql.DB) *AlarmGateway {
 	return &AlarmGateway{db: db}
 }
 
-func (g *AlarmGateway) List() ([]domain.Alarm, error) {
-	rows, err := g.db.Query(`SELECT id, hour, minute, period, days, enabled FROM alarms ORDER BY hour, minute`)
+func (g *AlarmGateway) List(userID string) ([]domain.Alarm, error) {
+	rows, err := g.db.Query(`SELECT id, hour, minute, period, days, enabled FROM alarms WHERE user_id=$1 ORDER BY hour, minute`, userID)
 	if err != nil {
 		log.Printf("alarm List: %v", err)
 		return nil, apperrors.ErrInternalServer
@@ -44,7 +44,7 @@ func (g *AlarmGateway) List() ([]domain.Alarm, error) {
 	return out, nil
 }
 
-func (g *AlarmGateway) ReplaceAll(alarms []domain.Alarm) ([]domain.Alarm, error) {
+func (g *AlarmGateway) ReplaceAll(userID string, alarms []domain.Alarm) ([]domain.Alarm, error) {
 	tx, err := g.db.Begin()
 	if err != nil {
 		log.Printf("alarm ReplaceAll begin tx: %v", err)
@@ -52,7 +52,7 @@ func (g *AlarmGateway) ReplaceAll(alarms []domain.Alarm) ([]domain.Alarm, error)
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec(`DELETE FROM alarms`); err != nil {
+	if _, err := tx.Exec(`DELETE FROM alarms WHERE user_id=$1`, userID); err != nil {
 		log.Printf("alarm ReplaceAll delete: %v", err)
 		return nil, apperrors.ErrInternalServer
 	}
@@ -61,8 +61,8 @@ func (g *AlarmGateway) ReplaceAll(alarms []domain.Alarm) ([]domain.Alarm, error)
 			a.Days = []string{}
 		}
 		if _, err := tx.Exec(
-			`INSERT INTO alarms(id, hour, minute, period, days, enabled) VALUES($1,$2,$3,$4,$5,$6)`,
-			a.ID, a.Hour, a.Minute, a.Period, jsonMarshal(a.Days), a.Enabled,
+			`INSERT INTO alarms(id, user_id, hour, minute, period, days, enabled) VALUES($1,$2,$3,$4,$5,$6,$7)`,
+			a.ID, userID, a.Hour, a.Minute, a.Period, jsonMarshal(a.Days), a.Enabled,
 		); err != nil {
 			log.Printf("alarm ReplaceAll insert: %v", err)
 			return nil, apperrors.ErrInternalServer
@@ -72,20 +72,28 @@ func (g *AlarmGateway) ReplaceAll(alarms []domain.Alarm) ([]domain.Alarm, error)
 		log.Printf("alarm ReplaceAll commit: %v", err)
 		return nil, apperrors.ErrInternalServer
 	}
-	return g.List()
+	return g.List(userID)
 }
 
-func (g *AlarmGateway) GetMaster() (bool, error) {
+func (g *AlarmGateway) GetMaster(userID string) (bool, error) {
 	var enabled bool
-	if err := g.db.QueryRow(`SELECT enabled FROM alarm_master WHERE id=1`).Scan(&enabled); err != nil {
+	err := g.db.QueryRow(`SELECT enabled FROM alarm_master WHERE user_id=$1`, userID).Scan(&enabled)
+	if err == sql.ErrNoRows {
+		return true, nil // default: enabled until the user changes it
+	}
+	if err != nil {
 		log.Printf("alarm GetMaster: %v", err)
 		return false, apperrors.ErrInternalServer
 	}
 	return enabled, nil
 }
 
-func (g *AlarmGateway) SetMaster(enabled bool) error {
-	if _, err := g.db.Exec(`UPDATE alarm_master SET enabled=$1 WHERE id=1`, enabled); err != nil {
+func (g *AlarmGateway) SetMaster(userID string, enabled bool) error {
+	if _, err := g.db.Exec(
+		`INSERT INTO alarm_master(user_id, enabled) VALUES($1,$2)
+		 ON CONFLICT(user_id) DO UPDATE SET enabled=$2`,
+		userID, enabled,
+	); err != nil {
 		log.Printf("alarm SetMaster: %v", err)
 		return apperrors.ErrInternalServer
 	}

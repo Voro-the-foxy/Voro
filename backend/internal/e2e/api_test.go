@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"voro/backend/internal/gateway/postgres"
 	"voro/backend/internal/server"
@@ -71,6 +72,37 @@ func authPost(t *testing.T, srv *httptest.Server, token, path string, body any) 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("POST %s failed: %v", path, err)
+	}
+	return resp
+}
+
+// signup registers a fresh user and returns its session token. The email is
+// unique per call so repeated test runs against a persistent DB don't collide.
+func signup(t *testing.T, srv *httptest.Server) string {
+	t.Helper()
+	email := fmt.Sprintf("user-%d@e2e.test", time.Now().UnixNano())
+	body := map[string]string{"email": email, "name": "E2E User", "password": "secret123"}
+	resp := postJSON(t, srv, "/api/auth/signup", body)
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("signup: expected 201, got %d", resp.StatusCode)
+	}
+	var result struct {
+		Token string `json:"token"`
+	}
+	json.NewDecoder(resp.Body).Decode(&result)
+	if result.Token == "" {
+		t.Fatal("signup: empty token in response")
+	}
+	return result.Token
+}
+
+func postJSON(t *testing.T, srv *httptest.Server, path string, body any) *http.Response {
+	t.Helper()
+	b, _ := json.Marshal(body)
+	resp, err := http.Post(srv.URL+path, "application/json", bytes.NewReader(b))
 	if err != nil {
 		t.Fatalf("POST %s failed: %v", path, err)
 	}
@@ -194,5 +226,92 @@ func TestAttemptFlow(t *testing.T) {
 	defer getResp.Body.Close()
 	if getResp.StatusCode != http.StatusOK {
 		t.Errorf("GET /api/attempts/%s: expected 200, got %d", saved.ID, getResp.StatusCode)
+	}
+}
+
+func TestUnauthenticated(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	// no Authorization header → protected route rejects with 401
+	resp, err := http.Get(srv.URL + "/api/classes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("GET /api/classes without token: expected 401, got %d", resp.StatusCode)
+	}
+}
+
+func TestSignupDuplicateEmail(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	email := fmt.Sprintf("dup-%d@e2e.test", time.Now().UnixNano())
+	body := map[string]string{"email": email, "name": "Dup", "password": "secret123"}
+
+	first := postJSON(t, srv, "/api/auth/signup", body)
+	first.Body.Close()
+	if first.StatusCode != http.StatusCreated {
+		t.Fatalf("first signup: expected 201, got %d", first.StatusCode)
+	}
+
+	second := postJSON(t, srv, "/api/auth/signup", body)
+	second.Body.Close()
+	if second.StatusCode != http.StatusConflict {
+		t.Errorf("duplicate signup: expected 409, got %d", second.StatusCode)
+	}
+}
+
+// TestUserDataIsolation is the regression test for the core bug: two distinct
+// users must not see each other's data.
+func TestUserDataIsolation(t *testing.T) {
+	srv := newTestServer(t)
+	defer srv.Close()
+
+	tokenA := signup(t, srv)
+	tokenB := signup(t, srv)
+
+	// User A creates a class.
+	resp := authPost(t, srv, tokenA, "/api/classes", map[string]string{"name": "A-Only Class"})
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("A POST /api/classes: expected 201, got %d", resp.StatusCode)
+	}
+	var aClass struct {
+		ID string `json:"id"`
+	}
+	json.NewDecoder(resp.Body).Decode(&aClass)
+
+	// User B lists classes and must not see A's class.
+	listResp := authGet(t, srv, tokenB, "/api/classes")
+	defer listResp.Body.Close()
+	var bClasses []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	json.NewDecoder(listResp.Body).Decode(&bClasses)
+	for _, c := range bClasses {
+		if c.ID == aClass.ID {
+			t.Fatalf("user B can see user A's class %q — data is not isolated", c.ID)
+		}
+	}
+
+	// User A still sees their own class.
+	aListResp := authGet(t, srv, tokenA, "/api/classes")
+	defer aListResp.Body.Close()
+	var aClasses []struct {
+		ID string `json:"id"`
+	}
+	json.NewDecoder(aListResp.Body).Decode(&aClasses)
+	found := false
+	for _, c := range aClasses {
+		if c.ID == aClass.ID {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("user A cannot see their own class")
 	}
 }

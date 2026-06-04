@@ -8,14 +8,14 @@ import (
 	"voro/backend/internal/gateway/ai"
 	"voro/backend/internal/gateway/postgres"
 
-	alarmhnd   "voro/backend/internal/handler/alarm"
+	alarmhnd "voro/backend/internal/handler/alarm"
 	attempthnd "voro/backend/internal/handler/attempt"
-	authhnd    "voro/backend/internal/handler/auth"
-	classhnd   "voro/backend/internal/handler/class"
-	examhnd    "voro/backend/internal/handler/exam"
-	notehnd    "voro/backend/internal/handler/note"
-	quizhnd    "voro/backend/internal/handler/quiz"
-	setuphnd   "voro/backend/internal/handler/setup"
+	authhnd "voro/backend/internal/handler/auth"
+	classhnd "voro/backend/internal/handler/class"
+	examhnd "voro/backend/internal/handler/exam"
+	notehnd "voro/backend/internal/handler/note"
+	quizhnd "voro/backend/internal/handler/quiz"
+	setuphnd "voro/backend/internal/handler/setup"
 
 	"voro/backend/internal/service/alarm"
 	"voro/backend/internal/service/attempt"
@@ -41,52 +41,64 @@ func newRouter(db *sql.DB) *http.ServeMux {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	authHnd := &authhnd.Handler{Service: &auth.Service{Gateway: postgres.NewAuthGateway(db)}}
+	authSvc := &auth.Service{Gateway: postgres.NewAuthGateway(db)}
+
+	// protected wraps a handler so it only runs for authenticated requests; the
+	// resolved user's ID is injected into the request context (see middleware.go).
+	protected := func(h http.HandlerFunc) http.HandlerFunc {
+		return requireAuth(authSvc, h)
+	}
+
+	authHnd := &authhnd.Handler{Service: authSvc}
+	mux.HandleFunc("POST /api/auth/signup", authHnd.Signup)
 	mux.HandleFunc("POST /api/auth/login", authHnd.Login)
 	mux.HandleFunc("GET /api/auth/me", authHnd.Me)
 	mux.HandleFunc("POST /api/auth/logout", authHnd.Logout)
 	mux.HandleFunc("DELETE /api/auth/account", authHnd.DeleteAccount)
 
 	classHnd := &classhnd.Handler{Service: &class.Service{Gateway: postgres.NewClassGateway(db)}}
-	mux.HandleFunc("GET /api/classes", classHnd.List)
-	mux.HandleFunc("PUT /api/classes", classHnd.ReplaceAll)
-	mux.HandleFunc("POST /api/classes", classHnd.Add)
-	mux.HandleFunc("DELETE /api/classes/{id}", classHnd.Delete)
+	mux.HandleFunc("GET /api/classes", protected(classHnd.List))
+	mux.HandleFunc("PUT /api/classes", protected(classHnd.ReplaceAll))
+	mux.HandleFunc("POST /api/classes", protected(classHnd.Add))
+	mux.HandleFunc("DELETE /api/classes/{id}", protected(classHnd.Delete))
 
 	noteHnd := &notehnd.Handler{Service: &note.Service{Gateway: postgres.NewNoteGateway(db)}}
-	mux.HandleFunc("GET /api/notes", noteHnd.ListByClass)
-	mux.HandleFunc("POST /api/notes", noteHnd.Add)
-	mux.HandleFunc("DELETE /api/notes/{id}", noteHnd.Delete)
-	mux.HandleFunc("DELETE /api/notes", noteHnd.DeleteByClass)
+	mux.HandleFunc("GET /api/notes", protected(noteHnd.ListByClass))
+	mux.HandleFunc("POST /api/notes", protected(noteHnd.Add))
+	mux.HandleFunc("DELETE /api/notes/{id}", protected(noteHnd.Delete))
+	mux.HandleFunc("DELETE /api/notes", protected(noteHnd.DeleteByClass))
 
 	alarmHnd := &alarmhnd.Handler{Service: &alarm.Service{Gateway: postgres.NewAlarmGateway(db)}}
-	mux.HandleFunc("GET /api/alarms", alarmHnd.List)
-	mux.HandleFunc("PUT /api/alarms", alarmHnd.ReplaceAll)
-	mux.HandleFunc("GET /api/alarms/master", alarmHnd.GetMaster)
-	mux.HandleFunc("PUT /api/alarms/master", alarmHnd.SetMaster)
+	mux.HandleFunc("GET /api/alarms", protected(alarmHnd.List))
+	mux.HandleFunc("PUT /api/alarms", protected(alarmHnd.ReplaceAll))
+	mux.HandleFunc("GET /api/alarms/master", protected(alarmHnd.GetMaster))
+	mux.HandleFunc("PUT /api/alarms/master", protected(alarmHnd.SetMaster))
 
 	examHnd := &examhnd.Handler{Service: &exam.Service{Gateway: postgres.NewExamGateway(db)}}
-	mux.HandleFunc("GET /api/exams", examHnd.List)
-	mux.HandleFunc("PUT /api/exams", examHnd.ReplaceAll)
-	mux.HandleFunc("GET /api/exams/master", examHnd.GetMaster)
-	mux.HandleFunc("PUT /api/exams/master", examHnd.SetMaster)
+	mux.HandleFunc("GET /api/exams", protected(examHnd.List))
+	mux.HandleFunc("PUT /api/exams", protected(examHnd.ReplaceAll))
+	mux.HandleFunc("GET /api/exams/master", protected(examHnd.GetMaster))
+	mux.HandleFunc("PUT /api/exams/master", protected(examHnd.SetMaster))
 
 	setupHnd := &setuphnd.Handler{Service: &setup.Service{Gateway: postgres.NewSetupGateway(db)}}
-	mux.HandleFunc("GET /api/setup", setupHnd.Get)
-	mux.HandleFunc("POST /api/setup/steps", setupHnd.MarkStep)
+	mux.HandleFunc("GET /api/setup", protected(setupHnd.Get))
+	mux.HandleFunc("POST /api/setup/steps", protected(setupHnd.MarkStep))
 
 	attemptHnd := &attempthnd.Handler{Service: &attempt.Service{Gateway: postgres.NewAttemptGateway(db)}}
-	mux.HandleFunc("GET /api/attempts", attemptHnd.List)
-	mux.HandleFunc("GET /api/attempts/{id}", attemptHnd.GetByID)
-	mux.HandleFunc("POST /api/attempts", attemptHnd.Save)
-	mux.HandleFunc("DELETE /api/attempts", attemptHnd.DeleteByClass)
+	mux.HandleFunc("GET /api/attempts", protected(attemptHnd.List))
+	mux.HandleFunc("GET /api/attempts/{id}", protected(attemptHnd.GetByID))
+	mux.HandleFunc("POST /api/attempts", protected(attemptHnd.Save))
+	mux.HandleFunc("DELETE /api/attempts", protected(attemptHnd.DeleteByClass))
 
+	// Documents/quizzes are owned by the AI server, which has no per-user
+	// partitioning yet — we require auth here but the underlying data is still
+	// shared. Per-user isolation of AI-server data is a follow-up.
 	quizHnd := &quizhnd.Handler{Service: &quiz.Service{Gateway: ai.NewQuizGateway()}}
-	mux.HandleFunc("POST /api/documents", quizHnd.UploadDocument)
-	mux.HandleFunc("GET /api/documents", quizHnd.ListDocuments)
-	mux.HandleFunc("DELETE /api/documents/{id}", quizHnd.DeleteDocument)
-	mux.HandleFunc("POST /api/quizzes", quizHnd.CreateQuiz)
-	mux.HandleFunc("GET /api/quizzes/{id}", quizHnd.GetQuiz)
+	mux.HandleFunc("POST /api/documents", protected(quizHnd.UploadDocument))
+	mux.HandleFunc("GET /api/documents", protected(quizHnd.ListDocuments))
+	mux.HandleFunc("DELETE /api/documents/{id}", protected(quizHnd.DeleteDocument))
+	mux.HandleFunc("POST /api/quizzes", protected(quizHnd.CreateQuiz))
+	mux.HandleFunc("GET /api/quizzes/{id}", protected(quizHnd.GetQuiz))
 
 	return mux
 }

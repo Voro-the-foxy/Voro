@@ -14,6 +14,13 @@ type Service struct {
 	Gateway Gateway
 }
 
+func (s *Service) Signup(email, name, password string) (domain.Session, error) {
+	if strings.TrimSpace(email) == "" || strings.TrimSpace(password) == "" {
+		return domain.Session{}, ErrMissingCredentials
+	}
+	return s.Gateway.Signup(email, strings.TrimSpace(name), password)
+}
+
 func (s *Service) Login(email, password string) (domain.Session, error) {
 	if strings.TrimSpace(email) == "" || strings.TrimSpace(password) == "" {
 		return domain.Session{}, ErrMissingCredentials
