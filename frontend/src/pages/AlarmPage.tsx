@@ -8,6 +8,11 @@ import {
   saveAlarms,
   saveAlarmsMaster,
 } from "@/lib/alarms";
+import {
+  requestNotifPermission,
+  ensureExactAlarmPermission,
+  scheduleAlarmNotifications,
+} from "@/lib/notifications";
 import type { Alarm, DayKey, Period } from "@/types/alarm";
 
 const DAYS: DayKey[] = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -259,6 +264,9 @@ export default function AlarmPage() {
     try {
       await Promise.all([saveAlarms(alarms), saveAlarmsMaster(masterEnabled)]);
       await markStepDone("alarm");
+      await requestNotifPermission();
+      await ensureExactAlarmPermission();
+      await scheduleAlarmNotifications(alarms, masterEnabled);
     } catch {
       // non-blocking: navigate regardless
     }

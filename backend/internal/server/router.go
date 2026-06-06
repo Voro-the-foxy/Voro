@@ -121,7 +121,11 @@ func cors(allowedOrigin string, next http.Handler) http.Handler {
 }
 
 func isAllowed(origin, allowedOrigin string) bool {
-	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") {
+	// Local dev (Vite) and Capacitor WebView origins.
+	// Capacitor Android defaults to the https://localhost scheme, iOS to
+	// capacitor://localhost — both must be allowed for the native app.
+	if strings.HasPrefix(origin, "http://localhost") || strings.HasPrefix(origin, "http://127.0.0.1") ||
+		strings.HasPrefix(origin, "https://localhost") || strings.HasPrefix(origin, "https://127.0.0.1") {
 		return true
 	}
 	if origin == "capacitor://localhost" {

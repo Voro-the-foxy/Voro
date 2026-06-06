@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only: allow cleartext (HTTP) backend calls.
+  A real device connects to the Mac LAN IP (e.g. 192.168.x.x) and the emulator
+  to 10.0.2.2; since the IP varies per environment, debug permits cleartext
+  globally. This file is merged into debug builds only and is NOT included in
+  the release APK.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

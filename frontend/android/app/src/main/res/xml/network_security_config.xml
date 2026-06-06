@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default policy for release builds: block cleartext (HTTP), allow HTTPS only.
+  In debug builds, src/debug/res/xml/network_security_config.xml overrides this
+  file to permit cleartext.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

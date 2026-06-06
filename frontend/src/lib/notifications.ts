@@ -1,12 +1,18 @@
 import { LocalNotifications } from "@capacitor/local-notifications";
 import type { ClassItem } from "@/types/schedule";
 import type { Exam } from "@/types/exam";
+import type { Alarm } from "@/types/alarm";
 import type { ClassNotifSettings, ExamNotifSettings } from "@/types/notificationSettings";
 import { STORAGE_KEYS, readJSON, writeJSON } from "@/lib/storage";
 
 // Capacitor weekday: 1=Sun, 2=Mon, 3=Tue, 4=Wed, 5=Thu, 6=Fri, 7=Sat
 // App DAYS index:    0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
 const toWeekday = (appDay: number) => (appDay === 6 ? 1 : appDay + 2);
+
+// DayKey → Capacitor weekday
+const DAY_KEY_TO_WEEKDAY: Record<string, number> = {
+  Su: 1, Mo: 2, Tu: 3, We: 4, Th: 5, Fr: 6, Sa: 7,
+};
 
 function fnv1a(str: string): number {
   let h = 0x811c9dc5;
@@ -31,6 +37,19 @@ export async function requestNotifPermission(): Promise<boolean> {
     return display === "granted";
   } catch {
     return false;
+  }
+}
+
+// Android 12+ requires the user to grant SCHEDULE_EXACT_ALARM in special app access.
+// Without it, setExact() throws SecurityException and alarms never fire.
+export async function ensureExactAlarmPermission(): Promise<void> {
+  try {
+    const result = await LocalNotifications.checkExactNotificationSetting();
+    if ((result as { exact_alarm?: string }).exact_alarm !== "granted") {
+      await LocalNotifications.changeExactNotificationSetting();
+    }
+  } catch {
+    // iOS and older Android don't have this API — ignore
   }
 }
 
@@ -203,3 +222,59 @@ export const loadExamNotifSettings = (): ExamNotifSettings =>
 
 export const saveExamNotifSettings = (s: ExamNotifSettings) =>
   writeJSON(STORAGE_KEYS.examNotif, s);
+
+const ALARM_NOTIF_IDS_KEY = "voro.alarmNotifIds.v1";
+
+export async function scheduleAlarmNotifications(
+  alarms: Alarm[],
+  masterEnabled: boolean
+): Promise<void> {
+  try {
+    const prevIds: number[] = readJSON<number[]>(ALARM_NOTIF_IDS_KEY, []);
+    if (prevIds.length > 0) {
+      await LocalNotifications.cancel({
+        notifications: prevIds.map((id) => ({ id })),
+      });
+    }
+
+    if (!masterEnabled) {
+      writeJSON(ALARM_NOTIF_IDS_KEY, []);
+      return;
+    }
+
+    const notifications: Parameters<
+      typeof LocalNotifications.schedule
+    >[0]["notifications"] = [];
+
+    for (const alarm of alarms) {
+      if (!alarm.enabled) continue;
+
+      const hour24 =
+        alarm.period === "AM"
+          ? alarm.hour === 12 ? 0 : alarm.hour
+          : alarm.hour === 12 ? 12 : alarm.hour + 12;
+
+      for (const day of alarm.days) {
+        const weekday = DAY_KEY_TO_WEEKDAY[day];
+        if (!weekday) continue;
+        const id = fnv1a(`alarm-${alarm.id}-${day}`);
+        const hh = String(alarm.hour).padStart(2, "0");
+        const mm = String(alarm.minute).padStart(2, "0");
+        notifications.push({
+          id,
+          title: "Voro Alarm",
+          body: `${alarm.period} ${hh}:${mm}`,
+          schedule: { on: { weekday, hour: hour24, minute: alarm.minute }, repeats: true, allowWhileIdle: true },
+          extra: { alarmId: alarm.id, kind: "alarm" },
+        });
+      }
+    }
+
+    if (notifications.length > 0) {
+      await LocalNotifications.schedule({ notifications });
+    }
+    writeJSON(ALARM_NOTIF_IDS_KEY, notifications.map((n) => n.id));
+  } catch (err) {
+    console.warn("scheduleAlarmNotifications failed:", err);
+  }
+}

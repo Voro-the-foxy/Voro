@@ -33,18 +33,32 @@ func ApplyMigrations(db *sql.DB) error {
 		END $$;
 	`)
 
-	// Drop the old singleton master/setup tables (keyed by a fixed id=1 row,
-	// shared by every user) so they can be recreated per-user below.
+	// Drop setup if it pre-dates the user_id column (was a singleton table)
 	_, _ = db.Exec(`
 		DO $$
 		BEGIN
-			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='setup' AND column_name='id') THEN
+			IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'setup')
+			AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'setup' AND column_name = 'user_id')
+			THEN
 				DROP TABLE setup;
 			END IF;
-			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='alarm_master' AND column_name='id') THEN
+		END $$;
+	`)
+
+	// Drop alarm_master/exam_master if they have the old singleton schema (id INT) — current schema uses user_id TEXT PRIMARY KEY
+	_, _ = db.Exec(`
+		DO $$
+		BEGIN
+			IF EXISTS (
+				SELECT 1 FROM information_schema.columns
+				WHERE table_name = 'alarm_master' AND column_name = 'id'
+			) THEN
 				DROP TABLE alarm_master;
 			END IF;
-			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='exam_master' AND column_name='id') THEN
+			IF EXISTS (
+				SELECT 1 FROM information_schema.columns
+				WHERE table_name = 'exam_master' AND column_name = 'id'
+			) THEN
 				DROP TABLE exam_master;
 			END IF;
 		END $$;

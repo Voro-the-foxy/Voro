@@ -47,5 +47,14 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Allow cleartext HTTP on the local network (LAN) so a real device can
+	     reach the Mac's LAN IP (http://192.168.x.x:8080) during development.
+	     Unlike NSAllowsArbitraryLoads, cleartext HTTP to the public internet
+	     stays blocked, so this is safe for App Store release (use HTTPS in prod). -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

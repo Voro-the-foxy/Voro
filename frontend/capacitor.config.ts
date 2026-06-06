@@ -5,9 +5,15 @@ const config: CapacitorConfig = {
   appName: "Voro",
   webDir: "dist",
   server: {
-    // 개발 중 로컬 dev 서버를 바라볼 때만 아래 주석을 해제하세요.
+    // Uncomment only when pointing at a local dev server during development.
     // url: "http://192.168.x.x:5173",
     // cleartext: true,
+  },
+  android: {
+    // Allow the WebView (https://localhost) to call a cleartext HTTP backend
+    // (http://<LAN IP>:8080); without this, mixed content is blocked.
+    // (Cleartext itself is permitted separately in network_security_config.xml.)
+    allowMixedContent: true,
   },
 };
 
