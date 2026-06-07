@@ -22,6 +22,14 @@ func toDTO(a domain.Alarm) DTO {
 	return DTO{ID: a.ID, Hour: a.Hour, Minute: a.Minute, Period: a.Period, Days: days, Enabled: a.Enabled}
 }
 
+// List godoc
+//
+//	@Summary		List alarms
+//	@Tags			alarms
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		DTO
+//	@Router			/api/alarms [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -39,6 +47,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// ReplaceAll godoc
+//
+//	@Summary		Replace all alarms
+//	@Tags			alarms
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body	[]DTO	true	"Alarm list"
+//	@Success		200		{array}	DTO
+//	@Router			/api/alarms [put]
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -69,6 +87,14 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// GetMaster godoc
+//
+//	@Summary		Get master alarm status
+//	@Tags			alarms
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	MasterDTO
+//	@Router			/api/alarms/master [get]
 func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -82,6 +108,16 @@ func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, MasterDTO{Enabled: enabled})
 }
 
+// SetMaster godoc
+//
+//	@Summary		Set master alarm status
+//	@Tags			alarms
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		MasterDTO	true	"Master alarm status"
+//	@Success		200		{object}	MasterDTO
+//	@Router			/api/alarms/master [put]
 func (h *Handler) SetMaster(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

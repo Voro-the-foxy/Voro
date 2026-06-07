@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "voro/backend/docs"
 	"voro/backend/internal/gateway/ai"
 	"voro/backend/internal/gateway/postgres"
 
@@ -27,6 +29,46 @@ import (
 	"voro/backend/internal/service/setup"
 )
 
+const darkThemeScript = `
+var s = document.createElement('style');
+s.textContent = [
+	"body, .swagger-ui { background: #0d0d0d !important; color: #e0e0e0 !important; }",
+	".swagger-ui .topbar { background: #000 !important; }",
+	".swagger-ui .info .title, .swagger-ui .info p, .swagger-ui .info a { color: #e0e0e0 !important; }",
+	".swagger-ui .scheme-container { background: #141414 !important; box-shadow: none !important; }",
+	".swagger-ui .opblock-tag { color: #e0e0e0 !important; border-bottom: 1px solid #333 !important; }",
+	".swagger-ui .opblock-tag:hover { background: #1a1a1a !important; }",
+	".swagger-ui .opblock { background: #1a1a1a !important; border-color: #333 !important; box-shadow: none !important; }",
+	".swagger-ui .opblock.opblock-get { border-color: #1f6feb !important; background: #0d1b2e !important; }",
+	".swagger-ui .opblock.opblock-post { border-color: #2ea043 !important; background: #0d2015 !important; }",
+	".swagger-ui .opblock.opblock-put { border-color: #d29922 !important; background: #2a1f00 !important; }",
+	".swagger-ui .opblock.opblock-delete { border-color: #da3633 !important; background: #2a0d0d !important; }",
+	".swagger-ui .opblock .opblock-summary { background: transparent !important; }",
+	".swagger-ui .opblock .opblock-summary-method { color: #fff !important; }",
+	".swagger-ui .opblock .opblock-summary-path, .swagger-ui .opblock .opblock-summary-description { color: #ccc !important; }",
+	".swagger-ui .opblock-body, .swagger-ui .opblock-section { background: #111 !important; }",
+	".swagger-ui .opblock-body pre.microlight { background: #0d0d0d !important; color: #e0e0e0 !important; }",
+	".swagger-ui section.models { background: #141414 !important; border-color: #333 !important; }",
+	".swagger-ui section.models h4, .swagger-ui .model-title, .swagger-ui .model { color: #e0e0e0 !important; }",
+	".swagger-ui .model-toggle::after { filter: invert(1) !important; }",
+	".swagger-ui table thead tr td, .swagger-ui table thead tr th { color: #aaa !important; border-color: #333 !important; }",
+	".swagger-ui .parameter__name, .swagger-ui .parameter__type, .swagger-ui .parameter__in { color: #ccc !important; }",
+	".swagger-ui .tab li, .swagger-ui .response-col_status, .swagger-ui .response-col_description { color: #ccc !important; }",
+	".swagger-ui select, .swagger-ui input[type=text], .swagger-ui textarea { background: #1a1a1a !important; color: #e0e0e0 !important; border-color: #444 !important; }",
+	".swagger-ui .btn { background: #1a1a1a !important; color: #e0e0e0 !important; border-color: #444 !important; }",
+	".swagger-ui .btn.execute { background: #1f6feb !important; color: #fff !important; border-color: #1f6feb !important; }",
+	".swagger-ui .btn.authorize { background: #2ea043 !important; color: #fff !important; border-color: #2ea043 !important; }",
+	".swagger-ui .dialog-ux .modal-ux { background: #1a1a1a !important; border-color: #444 !important; }",
+	".swagger-ui .dialog-ux .modal-ux-header { background: #141414 !important; border-color: #444 !important; }",
+	".swagger-ui .dialog-ux .modal-ux-header h3 { color: #e0e0e0 !important; }",
+	".swagger-ui .dialog-ux .modal-ux-content p, .swagger-ui .dialog-ux .modal-ux-content h4 { color: #ccc !important; }",
+	".swagger-ui .wrapper { background: #0d0d0d !important; }",
+	".swagger-ui .markdown p, .swagger-ui .markdown li { color: #ccc !important; }",
+	".swagger-ui .arrow { filter: invert(1) !important; }"
+].join(" ");
+document.head.appendChild(s);
+`
+
 // NewHandler builds the full HTTP handler (CORS + router).
 // allowedOrigin is the production frontend origin; empty string disables the
 // production-origin check (useful in tests).
@@ -40,6 +82,10 @@ func newRouter(db *sql.DB) *http.ServeMux {
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
+	mux.Handle("/api/docs/", httpSwagger.Handler(
+		httpSwagger.AfterScript(darkThemeScript),
+	))
 
 	authSvc := &auth.Service{Gateway: postgres.NewAuthGateway(db)}
 

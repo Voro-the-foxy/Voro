@@ -13,6 +13,15 @@ type Handler struct {
 	Service *notesvc.Service
 }
 
+// ListByClass godoc
+//
+//	@Summary		List notes by class
+//	@Tags			notes
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			classId	query	string	true	"Class ID"
+//	@Success		200		{array}	DTO
+//	@Router			/api/notes [get]
 func (h *Handler) ListByClass(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -34,6 +43,16 @@ func (h *Handler) ListByClass(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// Add godoc
+//
+//	@Summary		Add a note
+//	@Tags			notes
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateRequest	true	"Note payload"
+//	@Success		201		{object}	DTO
+//	@Router			/api/notes [post]
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -55,6 +74,14 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Delete godoc
+//
+//	@Summary		Delete a note
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Note ID"
+//	@Success		204
+//	@Router			/api/notes/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -72,6 +99,14 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// DeleteByClass godoc
+//
+//	@Summary		Delete all notes by class
+//	@Tags			notes
+//	@Security		BearerAuth
+//	@Param			classId	query	string	true	"Class ID"
+//	@Success		204
+//	@Router			/api/notes [delete]
 func (h *Handler) DeleteByClass(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

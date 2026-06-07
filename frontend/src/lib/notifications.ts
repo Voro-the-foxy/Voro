@@ -225,6 +225,14 @@ export const saveExamNotifSettings = (s: ExamNotifSettings) =>
 
 const ALARM_NOTIF_IDS_KEY = "voro.alarmNotifIds.v1";
 
+const ALARM_MESSAGES = [
+  { title: "Time to study! 🦊", body: "How about a quick quiz right now?" },
+  { title: "Quick review time! 🦊", body: "A short quiz keeps the knowledge fresh." },
+  { title: "Voro is waiting 🦊", body: "Small reviews make a big difference!" },
+  { title: "Perfect time to review! 🦊", body: "Recall it before you forget it." },
+  { title: "Keep up the pace! 🦊", body: "Even one question gets you closer to your goal." },
+];
+
 export async function scheduleAlarmNotifications(
   alarms: Alarm[],
   masterEnabled: boolean
@@ -258,12 +266,12 @@ export async function scheduleAlarmNotifications(
         const weekday = DAY_KEY_TO_WEEKDAY[day];
         if (!weekday) continue;
         const id = fnv1a(`alarm-${alarm.id}-${day}`);
-        const hh = String(alarm.hour).padStart(2, "0");
-        const mm = String(alarm.minute).padStart(2, "0");
+        const msg = ALARM_MESSAGES[Math.floor(Math.random() * ALARM_MESSAGES.length)];
         notifications.push({
           id,
-          title: "Voro Alarm",
-          body: `${alarm.period} ${hh}:${mm}`,
+          title: msg.title,
+          body: msg.body,
+          largeIcon: "voro_logo",
           schedule: { on: { weekday, hour: hour24, minute: alarm.minute }, repeats: true, allowWhileIdle: true },
           extra: { alarmId: alarm.id, kind: "alarm" },
         });

@@ -1,3 +1,19 @@
+// Package main is the entry point for the Voro API server.
+//
+//	@title			Voro API
+//	@version		1.0
+//	@description	Voro study management app backend API
+//
+//	@contact.name	Voro Team
+//
+//	@host		voro-production-405e.up.railway.app
+//	@BasePath	/
+//	@schemes	https
+//
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Format: Bearer {token}
 package main
 
 import (

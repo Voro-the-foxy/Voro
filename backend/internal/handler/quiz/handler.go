@@ -16,6 +16,16 @@ type Handler struct {
 
 const maxUploadSize = 50 << 20 // 50 MiB
 
+// UploadDocument godoc
+//
+//	@Summary		Upload a document (PDF)
+//	@Tags			quiz
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			file	formData	file	true	"PDF file (max 50 MB)"
+//	@Success		201		{object}	DocumentDTO
+//	@Router			/api/documents [post]
 func (h *Handler) UploadDocument(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
 	doc, err := h.Service.UploadDocument(r.Body, r.Header.Get("Content-Type"))
@@ -28,6 +38,14 @@ func (h *Handler) UploadDocument(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListDocuments godoc
+//
+//	@Summary		List documents
+//	@Tags			quiz
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		DocumentDTO
+//	@Router			/api/documents [get]
 func (h *Handler) ListDocuments(w http.ResponseWriter, r *http.Request) {
 	docs, err := h.Service.ListDocuments()
 	if err != nil {
@@ -43,6 +61,14 @@ func (h *Handler) ListDocuments(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// DeleteDocument godoc
+//
+//	@Summary		Delete a document
+//	@Tags			quiz
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Document ID"
+//	@Success		204
+//	@Router			/api/documents/{id} [delete]
 func (h *Handler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -56,6 +82,16 @@ func (h *Handler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// CreateQuiz godoc
+//
+//	@Summary		Create a quiz
+//	@Tags			quiz
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateRequest	true	"Quiz creation options"
+//	@Success		201		{object}	QuizDTO
+//	@Router			/api/quizzes [post]
 func (h *Handler) CreateQuiz(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -70,6 +106,15 @@ func (h *Handler) CreateQuiz(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusCreated, toQuizDTO(q))
 }
 
+// GetQuiz godoc
+//
+//	@Summary		Get a quiz
+//	@Tags			quiz
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Quiz ID"
+//	@Success		200	{object}	QuizDTO
+//	@Router			/api/quizzes/{id} [get]
 func (h *Handler) GetQuiz(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {

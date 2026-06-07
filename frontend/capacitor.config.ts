@@ -9,12 +9,7 @@ const config: CapacitorConfig = {
     // url: "http://192.168.x.x:5173",
     // cleartext: true,
   },
-  android: {
-    // Allow the WebView (https://localhost) to call a cleartext HTTP backend
-    // (http://<LAN IP>:8080); without this, mixed content is blocked.
-    // (Cleartext itself is permitted separately in network_security_config.xml.)
-    allowMixedContent: true,
-  },
+  android: {},
 };
 
 export default config;

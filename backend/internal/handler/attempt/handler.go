@@ -34,6 +34,15 @@ func toDTO(a domain.Attempt) DTO {
 	}
 }
 
+// List godoc
+//
+//	@Summary		List quiz attempts
+//	@Tags			attempts
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			classId	query	string	false	"Class ID (omit for all)"
+//	@Success		200		{array}	DTO
+//	@Router			/api/attempts [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -52,6 +61,15 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// GetByID godoc
+//
+//	@Summary		Get a quiz attempt
+//	@Tags			attempts
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Attempt ID"
+//	@Success		200	{object}	DTO
+//	@Router			/api/attempts/{id} [get]
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -70,6 +88,16 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, toDTO(a))
 }
 
+// Save godoc
+//
+//	@Summary		Save a quiz attempt
+//	@Tags			attempts
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		CreateRequest	true	"Attempt payload"
+//	@Success		201		{object}	DTO
+//	@Router			/api/attempts [post]
 func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -97,6 +125,14 @@ func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusCreated, toDTO(a))
 }
 
+// DeleteByClass godoc
+//
+//	@Summary		Delete all attempts by class
+//	@Tags			attempts
+//	@Security		BearerAuth
+//	@Param			classId	query	string	true	"Class ID"
+//	@Success		204
+//	@Router			/api/attempts [delete]
 func (h *Handler) DeleteByClass(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

@@ -1,7 +1,9 @@
 import { createRootRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { SideNav } from "@/component/SideNav";
 import { ensureValidSession } from "@/lib/auth";
+import { listAttempts } from "@/lib/attempts";
 
 /* eslint-disable react-refresh/only-export-components */
 export const Route = createRootRoute({
@@ -16,6 +18,26 @@ function RootLayout() {
     const handler = () => void navigate({ to: "/login" });
     window.addEventListener("voro-session-expired", handler);
     return () => window.removeEventListener("voro-session-expired", handler);
+  }, [navigate]);
+
+  useEffect(() => {
+    const listenerPromise = LocalNotifications.addListener(
+      "localNotificationActionPerformed",
+      async (action) => {
+        if (action.notification.extra?.kind !== "alarm") return;
+        try {
+          const attempts = await listAttempts();
+          if (attempts.length > 0) {
+            void navigate({ to: "/quiz/$classId", params: { classId: attempts[0].classId } });
+          } else {
+            void navigate({ to: "/quiz" });
+          }
+        } catch {
+          void navigate({ to: "/quiz" });
+        }
+      }
+    );
+    return () => { void listenerPromise.then((l) => l.remove()); };
   }, [navigate]);
 
   return (

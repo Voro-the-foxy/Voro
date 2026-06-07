@@ -1,0 +1,887 @@
+basePath: /
+definitions:
+  alarm.DTO:
+    properties:
+      days:
+        items:
+          type: string
+        type: array
+      enabled:
+        type: boolean
+      hour:
+        type: integer
+      id:
+        type: string
+      minute:
+        type: integer
+      period:
+        type: string
+    type: object
+  alarm.MasterDTO:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  attempt.CreateRequest:
+    properties:
+      answers:
+        items:
+          type: integer
+        type: array
+      class_id:
+        type: string
+      correct_indices:
+        items:
+          type: integer
+        type: array
+      lecture_title:
+        type: string
+      question_ids:
+        items:
+          type: string
+        type: array
+      quiz_id:
+        type: string
+      score:
+        type: integer
+      total:
+        type: integer
+    type: object
+  attempt.DTO:
+    properties:
+      answers:
+        items:
+          type: integer
+        type: array
+      class_id:
+        type: string
+      completed_at:
+        type: integer
+      correct_indices:
+        items:
+          type: integer
+        type: array
+      id:
+        type: string
+      lecture_title:
+        type: string
+      question_ids:
+        items:
+          type: string
+        type: array
+      quiz_id:
+        type: string
+      score:
+        type: integer
+      total:
+        type: integer
+    type: object
+  auth.LoginRequestDTO:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.LoginResponseDTO:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/auth.UserDTO'
+    type: object
+  auth.SignupRequestDTO:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.UserDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  class.ItemDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      slots:
+        items:
+          type: string
+        type: array
+    type: object
+  exam.DTO:
+    properties:
+      class_name:
+        type: string
+      day:
+        type: integer
+      enabled:
+        type: boolean
+      hour:
+        type: integer
+      id:
+        type: string
+      minute:
+        type: integer
+      month:
+        type: integer
+      period:
+        type: string
+      year:
+        type: integer
+    type: object
+  exam.MasterDTO:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  note.CreateRequest:
+    properties:
+      class_id:
+        type: string
+      document_id:
+        type: string
+      filename:
+        type: string
+      size:
+        type: integer
+    type: object
+  note.DTO:
+    properties:
+      added_at:
+        type: integer
+      class_id:
+        type: string
+      document_id:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      size:
+        type: integer
+    type: object
+  quiz.CreateRequest:
+    properties:
+      count:
+        type: integer
+      difficulty:
+        type: string
+      document_id:
+        type: string
+      threshold:
+        type: number
+    type: object
+  quiz.DocumentDTO:
+    properties:
+      chunk_count:
+        type: integer
+      id:
+        type: string
+      source_type:
+        type: string
+      title:
+        type: string
+    type: object
+  quiz.QuestionDTO:
+    properties:
+      answer_index:
+        type: integer
+      choices:
+        items:
+          type: string
+        type: array
+      explanation:
+        type: string
+      id:
+        type: string
+      question_text:
+        type: string
+      source_chunk_ids:
+        items:
+          type: string
+        type: array
+      validation_score:
+        type: number
+    type: object
+  quiz.QuizDTO:
+    properties:
+      document_id:
+        type: string
+      id:
+        type: string
+      questions:
+        items:
+          $ref: '#/definitions/quiz.QuestionDTO'
+        type: array
+      status:
+        type: string
+    type: object
+  setup.StateDTO:
+    properties:
+      alarm:
+        type: boolean
+      exam:
+        type: boolean
+      notes:
+        type: boolean
+      schedule:
+        type: boolean
+    type: object
+  setup.StepRequest:
+    properties:
+      step:
+        type: string
+    type: object
+host: voro-production-405e.up.railway.app
+info:
+  contact:
+    name: Voro Team
+  description: Voro study management app backend API
+  title: Voro API
+  version: "1.0"
+paths:
+  /api/alarms:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/alarm.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List alarms
+      tags:
+      - alarms
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Alarm list
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/alarm.DTO'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/alarm.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Replace all alarms
+      tags:
+      - alarms
+  /api/alarms/master:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/alarm.MasterDTO'
+      security:
+      - BearerAuth: []
+      summary: Get master alarm status
+      tags:
+      - alarms
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Master alarm status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/alarm.MasterDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/alarm.MasterDTO'
+      security:
+      - BearerAuth: []
+      summary: Set master alarm status
+      tags:
+      - alarms
+  /api/attempts:
+    delete:
+      parameters:
+      - description: Class ID
+        in: query
+        name: classId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete all attempts by class
+      tags:
+      - attempts
+    get:
+      parameters:
+      - description: Class ID (omit for all)
+        in: query
+        name: classId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/attempt.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List quiz attempts
+      tags:
+      - attempts
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Attempt payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/attempt.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/attempt.DTO'
+      security:
+      - BearerAuth: []
+      summary: Save a quiz attempt
+      tags:
+      - attempts
+  /api/attempts/{id}:
+    get:
+      parameters:
+      - description: Attempt ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/attempt.DTO'
+      security:
+      - BearerAuth: []
+      summary: Get a quiz attempt
+      tags:
+      - attempts
+  /api/auth/account:
+    delete:
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Delete account
+      tags:
+      - auth
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.LoginResponseDTO'
+        "400":
+          description: invalid request body
+          schema:
+            type: string
+        "401":
+          description: invalid email or password
+          schema:
+            type: string
+      summary: Log in
+      tags:
+      - auth
+  /api/auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Log out
+      tags:
+      - auth
+  /api/auth/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.UserDTO'
+        "401":
+          description: unauthorized
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - auth
+  /api/auth/signup:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Signup payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/auth.SignupRequestDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.LoginResponseDTO'
+        "400":
+          description: invalid request body
+          schema:
+            type: string
+        "409":
+          description: email already exists
+          schema:
+            type: string
+      summary: Sign up
+      tags:
+      - auth
+  /api/classes:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/class.ItemDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List classes
+      tags:
+      - classes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Class name
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/class.ItemDTO'
+      security:
+      - BearerAuth: []
+      summary: Add a class
+      tags:
+      - classes
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Class list
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/class.ItemDTO'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/class.ItemDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Replace all classes
+      tags:
+      - classes
+  /api/classes/{id}:
+    delete:
+      parameters:
+      - description: Class ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a class
+      tags:
+      - classes
+  /api/documents:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/quiz.DocumentDTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List documents
+      tags:
+      - quiz
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: PDF file (max 50 MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/quiz.DocumentDTO'
+      security:
+      - BearerAuth: []
+      summary: Upload a document (PDF)
+      tags:
+      - quiz
+  /api/documents/{id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a document
+      tags:
+      - quiz
+  /api/exams:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/exam.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List exams
+      tags:
+      - exams
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Exam list
+        in: body
+        name: body
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/exam.DTO'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/exam.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Replace all exams
+      tags:
+      - exams
+  /api/exams/master:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/exam.MasterDTO'
+      security:
+      - BearerAuth: []
+      summary: Get master exam status
+      tags:
+      - exams
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Master exam status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/exam.MasterDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/exam.MasterDTO'
+      security:
+      - BearerAuth: []
+      summary: Set master exam status
+      tags:
+      - exams
+  /api/notes:
+    delete:
+      parameters:
+      - description: Class ID
+        in: query
+        name: classId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete all notes by class
+      tags:
+      - notes
+    get:
+      parameters:
+      - description: Class ID
+        in: query
+        name: classId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/note.DTO'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List notes by class
+      tags:
+      - notes
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Note payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/note.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/note.DTO'
+      security:
+      - BearerAuth: []
+      summary: Add a note
+      tags:
+      - notes
+  /api/notes/{id}:
+    delete:
+      parameters:
+      - description: Note ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Delete a note
+      tags:
+      - notes
+  /api/quizzes:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Quiz creation options
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/quiz.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/quiz.QuizDTO'
+      security:
+      - BearerAuth: []
+      summary: Create a quiz
+      tags:
+      - quiz
+  /api/quizzes/{id}:
+    get:
+      parameters:
+      - description: Quiz ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/quiz.QuizDTO'
+      security:
+      - BearerAuth: []
+      summary: Get a quiz
+      tags:
+      - quiz
+  /api/setup:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setup.StateDTO'
+      security:
+      - BearerAuth: []
+      summary: Get onboarding state
+      tags:
+      - setup
+  /api/setup/steps:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Step to mark (schedule | alarm | exam | notes)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/setup.StepRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/setup.StateDTO'
+      security:
+      - BearerAuth: []
+      summary: Mark onboarding step complete
+      tags:
+      - setup
+schemes:
+- https
+securityDefinitions:
+  BearerAuth:
+    description: 'Format: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

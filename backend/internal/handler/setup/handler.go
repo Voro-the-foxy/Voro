@@ -13,6 +13,14 @@ type Handler struct {
 	Service *setupsvc.Service
 }
 
+// Get godoc
+//
+//	@Summary		Get onboarding state
+//	@Tags			setup
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	StateDTO
+//	@Router			/api/setup [get]
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -26,6 +34,16 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, StateDTO{Schedule: s.Schedule, Alarm: s.Alarm, Exam: s.Exam, Notes: s.Notes})
 }
 
+// MarkStep godoc
+//
+//	@Summary		Mark onboarding step complete
+//	@Tags			setup
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		StepRequest	true	"Step to mark (schedule | alarm | exam | notes)"
+//	@Success		200		{object}	StateDTO
+//	@Router			/api/setup/steps [post]
 func (h *Handler) MarkStep(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

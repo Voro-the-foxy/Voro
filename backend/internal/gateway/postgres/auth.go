@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
 	"voro/backend/internal/domain"
 	apperrors "voro/backend/internal/shared/errors"
 	"voro/backend/internal/shared/gen"
@@ -28,12 +29,17 @@ func (g *AuthGateway) Signup(email, name, password string) (domain.Session, erro
 		name = normalizedEmail
 	}
 
+	hash, err := hashPassword(password)
+	if err != nil {
+		return domain.Session{}, apperrors.ErrInternalServer
+	}
+
 	user := domain.User{ID: "user_" + gen.NewID(), Email: normalizedEmail, Name: name}
 	res, err := g.db.Exec(`
 		INSERT INTO users(id, email, name, password_hash)
 		VALUES($1,$2,$3,$4)
 		ON CONFLICT(email) DO NOTHING`,
-		user.ID, normalizedEmail, name, hashPassword(password),
+		user.ID, normalizedEmail, name, hash,
 	)
 	if err != nil {
 		return domain.Session{}, apperrors.ErrInternalServer
@@ -54,18 +60,30 @@ func (g *AuthGateway) Signup(email, name, password string) (domain.Session, erro
 
 func (g *AuthGateway) Login(email, password string) (domain.Session, error) {
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
-	hash := hashPassword(password)
 
 	var user domain.User
+	var storedHash string
 	err := g.db.QueryRow(
-		`SELECT id, email, name FROM users WHERE email=$1 AND password_hash=$2`,
-		normalizedEmail, hash,
-	).Scan(&user.ID, &user.Email, &user.Name)
+		`SELECT id, email, name, password_hash FROM users WHERE email=$1`,
+		normalizedEmail,
+	).Scan(&user.ID, &user.Email, &user.Name, &storedHash)
 	if err == sql.ErrNoRows {
 		return domain.Session{}, apperrors.ErrInvalidCredentials
 	}
 	if err != nil {
 		return domain.Session{}, apperrors.ErrInternalServer
+	}
+
+	matched, legacy := verifyPassword(storedHash, password)
+	if !matched {
+		return domain.Session{}, apperrors.ErrInvalidCredentials
+	}
+
+	// Migrate legacy SHA-256 hash to bcrypt on successful login.
+	if legacy {
+		if newHash, err := hashPassword(password); err == nil {
+			_, _ = g.db.Exec(`UPDATE users SET password_hash=$1 WHERE email=$2`, newHash, normalizedEmail)
+		}
 	}
 
 	token, err := newToken()
@@ -115,17 +133,40 @@ func (g *AuthGateway) DeleteAccount(token string) error {
 
 func (g *AuthGateway) seedUser(email, password, name string) {
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+	hash, err := hashPassword(password)
+	if err != nil {
+		return
+	}
 	g.db.Exec(`
 		INSERT INTO users(id, email, name, password_hash)
 		VALUES('user_demo', $1, $2, $3)
 		ON CONFLICT(email) DO NOTHING`,
-		normalizedEmail, name, hashPassword(password),
+		normalizedEmail, name, hash,
+	)
+	// Migrate demo user's hash if it was stored as legacy SHA-256.
+	g.db.Exec(`
+		UPDATE users SET password_hash=$1
+		WHERE email=$2 AND password_hash NOT LIKE '$2%'`,
+		hash, normalizedEmail,
 	)
 }
 
-func hashPassword(password string) string {
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// verifyPassword returns (matched, wasLegacySHA256).
+func verifyPassword(storedHash, password string) (bool, bool) {
+	if strings.HasPrefix(storedHash, "$2") {
+		return bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password)) == nil, false
+	}
+	// Legacy unsalted SHA-256
 	sum := sha256.Sum256([]byte(password))
-	return hex.EncodeToString(sum[:])
+	return hex.EncodeToString(sum[:]) == storedHash, true
 }
 
 func newToken() (string, error) {

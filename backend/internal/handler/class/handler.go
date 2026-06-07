@@ -14,6 +14,14 @@ type Handler struct {
 	Service *classsvc.Service
 }
 
+// List godoc
+//
+//	@Summary		List classes
+//	@Tags			classes
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		ItemDTO
+//	@Router			/api/classes [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -35,6 +43,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// ReplaceAll godoc
+//
+//	@Summary		Replace all classes
+//	@Tags			classes
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		[]ItemDTO	true	"Class list"
+//	@Success		200		{array}		ItemDTO
+//	@Router			/api/classes [put]
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -69,6 +87,16 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// Add godoc
+//
+//	@Summary		Add a class
+//	@Tags			classes
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		object{name=string}	true	"Class name"
+//	@Success		201		{object}	ItemDTO
+//	@Router			/api/classes [post]
 func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -94,6 +122,14 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusCreated, ItemDTO{ID: c.ID, Name: c.Name, Slots: slots})
 }
 
+// Delete godoc
+//
+//	@Summary		Delete a class
+//	@Tags			classes
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Class ID"
+//	@Success		204
+//	@Router			/api/classes/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

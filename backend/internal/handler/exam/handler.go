@@ -21,6 +21,14 @@ func toDTO(e domain.Exam) DTO {
 	}
 }
 
+// List godoc
+//
+//	@Summary		List exams
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		DTO
+//	@Router			/api/exams [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -38,6 +46,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// ReplaceAll godoc
+//
+//	@Summary		Replace all exams
+//	@Tags			exams
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body	[]DTO	true	"Exam list"
+//	@Success		200		{array}	DTO
+//	@Router			/api/exams [put]
 func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -67,6 +85,14 @@ func (h *Handler) ReplaceAll(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, out)
 }
 
+// GetMaster godoc
+//
+//	@Summary		Get master exam status
+//	@Tags			exams
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	MasterDTO
+//	@Router			/api/exams/master [get]
 func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {
@@ -80,6 +106,16 @@ func (h *Handler) GetMaster(w http.ResponseWriter, r *http.Request) {
 	httputil.WriteJSON(w, http.StatusOK, MasterDTO{Enabled: enabled})
 }
 
+// SetMaster godoc
+//
+//	@Summary		Set master exam status
+//	@Tags			exams
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		MasterDTO	true	"Master exam status"
+//	@Success		200		{object}	MasterDTO
+//	@Router			/api/exams/master [put]
 func (h *Handler) SetMaster(w http.ResponseWriter, r *http.Request) {
 	userID, ok := httputil.UserID(w, r)
 	if !ok {

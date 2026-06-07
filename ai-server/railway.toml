@@ -1,6 +1,7 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+watchPatterns = ["ai-server/**"]
 
 [deploy]
 preDeployCommand = "uv run alembic upgrade head"
